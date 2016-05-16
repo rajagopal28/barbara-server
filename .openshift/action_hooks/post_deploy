@@ -1,0 +1,41 @@
+#!/bin/bash
+# This is a simple post deploy hook executed after your application
+# is deployed and started.  This script gets executed directly, so
+# it could be python, php, ruby, etc.
+
+source $OPENSHIFT_HOMEDIR'python/virtenv/bin/activate'
+CURRENT_DIRECTORY=$(pwd)
+
+# if there is a migrations directory in $OPENSHIFT_DATA_DIR folder then it means we need not init
+# we can just copy the files
+if [  -d $OPENSHIFT_DATA_DIR'migrations/' ]; then
+    echo "Copying migrations directory from $OPENSHIFT_DATA_DIR to $OPENSHIFT_REPO_DIR/wsgi"
+    cp -rf $OPENSHIFT_DATA_DIR'migrations/' $OPENSHIFT_REPO_DIR'wsgi/'
+else
+    echo "Creating the $OPENSHIFT_DATA_DIR/migrations directory "
+    mkdir $OPENSHIFT_DATA_DIR'migrations'
+fi
+
+#execute init only for the fist time
+echo "Entering  $OPENSHIFT_REPO_DIR/wsgi/ directory"
+cd $OPENSHIFT_REPO_DIR'wsgi/'
+if [ ! -d $OPENSHIFT_REPO_DIR'wsgi/migrations/' ]; then
+    echo "Executing 'python db.py' db init"
+    python db.py db init
+fi
+
+echo "Executing 'python $OPENSHIFT_REPO_DIR/wsgi/db.py' db migrate'"
+python db.py db migrate
+
+echo "Executing 'python $OPENSHIFT_REPO_DIR/wsgi/db.py' db upgrade"
+python db.py db upgrade
+
+
+if [  -d $OPENSHIFT_DATA_DIR'migrations/' ]; then
+    echo "Copying the contents from $OPENSHIFT_DATA_DIR/migrations to $OPENSHIFT_REPO_DIR/wsgi/migrations directory "
+    cp -rf $OPENSHIFT_REPO_DIR'wsgi/migrations/' $OPENSHIFT_DATA_DIR
+fi
+
+
+echo "Operations executed...Entering $CURRENT_DIRECTORY"
+cd $CURRENT_DIRECTORY

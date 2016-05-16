@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block body %}
+     <h2>User Profile</h2>
+    {% if user %}
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Full Name</h4>
+            </div>
+            <div class="medium-6 large-8 columns">
+                {{ user.first_name }} {{ user.last_name }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Joined: </h4>
+            </div>
+            <div class="medium-6 large-8 columns">{{ user.created_ts }}</div>
+        </div>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Email: </h4></div>
+            <div class="medium-6 large-8 columns"><a href="mailto:{{ user.email }}">{{ user.email }}</a></div>
+        </div>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>username: </h4></div>
+            <div class="medium-6 large-8 columns">{{ user.username }}</div>
+        </div>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Wallet: </h4></div>
+            <div class="medium-6 large-8 columns">{{ user.wallet }} {{ user.currency_type }}</div>
+        </div>
+    {% endif %}
+{% endblock %}

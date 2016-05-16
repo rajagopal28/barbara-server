@@ -60,3 +60,19 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+*.py[co]
+*.sw[po]
+*.bak
+*.orig
+*~
+*.egg-info
+.project
+.pydevproject
+venv/
+virtenv/
+env
+*.DS_Store
+*.pyc
+.idea/
+wsgi/migrations/
+__pycache__

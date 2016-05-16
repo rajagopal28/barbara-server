@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block body %}
+<h2>All Users</h2>
+<table>
+  <thead>
+    <tr>
+      <th width="20%">Full Name</th>
+      <th width="20%">username</th>
+      <th width="20%">SpeakerProfileId</th>
+      <th width="20%">Wallet</th>
+      <th width="20%">Joined</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for user in users %}
+    <tr>
+      <td>{{ user.full_name()}}</td>
+      <td>{{ user.username}}</td>
+      <td>{{ user.speaker_profile_id}}</td>
+      <td>{{ user.wallet}} {{ user.currency_type }}</td>
+      <td>{{ user.created_ts}}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
