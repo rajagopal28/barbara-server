@@ -1,9 +1,14 @@
 from flask import render_template, redirect, session, url_for, request, jsonify
+from werkzeug import secure_filename
+from os import path
 
 from barbara import app, db
 
 from barbara.models.users import User
-from oxford.speaker_recognition.Identification import CreateProfile
+from oxford.speaker_recognition.Identification.CreateProfile import create_profile
+from oxford.speaker_recognition.Identification.EnrollProfile import enroll_profile
+from oxford.speaker_recognition.Identification.PrintAllProfiles import print_all_profiles
+
 
 @app.route("/users")
 def view_users():
@@ -33,6 +38,29 @@ def logout_user():
     return redirect(url_for('home'))
 
 
+@app.route("/verify-voice", methods=['POST', 'GET'])
+def voice_register():
+    # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
+    if request.method == 'POST':
+        # receive voice file from request
+        _user_id = request.form['userId']
+        user = User.query.filter_by(id=_user_id).first()
+        _file = request.files['file']
+        if _file and user:
+            filename = secure_filename(_file.filename)
+            # print app.config['UPLOAD_FOLDER']
+            _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
+            _file.save(_created_file_path)
+            print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+            print user.speaker_profile_id
+            print _created_file_path
+            enroll_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], user.speaker_profile_id, _created_file_path)
+        # register with the current user's speaker profile
+        return redirect(url_for('home'))
+    else:
+        return render_template('post-voice.html')
+
+
 @app.route("/my-profile")
 def my_profile():
     if session.get('user', None):
@@ -55,10 +83,13 @@ def add_user():
     _username = request.form['username']
     _password = request.form['password']
     _speaker_profile_id = request.form['speakerProfileId']
+    # create_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], app.config['DEFAULT_LOCALE'])
     _wallet = 10000
+    _credit = 0
     _currency_type = 'INR'
     new_user = User(first_name=_first_name, last_name=_last_name,
-                    username=_username, password=_password, wallet=_wallet, currency_type=_currency_type,
+                    username=_username, password=_password, wallet=_wallet,
+                    credit=_credit, currency_type=_currency_type,
                     speaker_profile_id=_speaker_profile_id)
     db.session.add(new_user)
     db.session.commit()

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block body %}
+<form action="" method="post" enctype="multipart/form-data" class="form-horizontal">
+    <h2>Login</h2>
+    {% if error %}
+        <div class="large-12 columns">
+            <div class="alert callout">
+                <p><strong>Error:</strong> {{ error }}</p>
+            </div>
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="large-4 medium-4 columns">
+            <label>Command</label>
+            <input type="text" name="command" class="input-xlarge"
+                   placeholder="command" value="{{ request.form.command }}"
+                   required>
+        </div>
+    </div>
+    <div class="row">
+        <div class="large-4 medium-4 columns">
+            <label>Result</label>
+            <div>
+                {% if command_response.response_text %}
+                    {{ command_response.response_text }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="large-4 medium-4 columns">
+            <button type="submit" class="button">Signin</button>
+            <a href="{{ url_for('home') }}">Back to home</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

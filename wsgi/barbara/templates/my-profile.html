@@ -31,5 +31,10 @@
                 <h4>Wallet: </h4></div>
             <div class="medium-6 large-8 columns">{{ user.wallet }} {{ user.currency_type }}</div>
         </div>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Credit: </h4></div>
+            <div class="medium-6 large-8 columns">{{ user.credit }} {{ user.currency_type }}</div>
+        </div>
     {% endif %}
 {% endblock %}

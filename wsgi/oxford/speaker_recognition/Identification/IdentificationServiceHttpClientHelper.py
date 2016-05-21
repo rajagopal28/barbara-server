@@ -32,6 +32,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import httplib
 from urlparse import urlparse
+import urllib
 import json
 import time
 from contextlib import closing
@@ -130,7 +131,7 @@ class IdentificationServiceHttpClientHelper:
             # Prepare the request
             request_url = '{0}/{1}/enroll'.format(
                 self._IDENTIFICATION_PROFILES_URI,
-                urlparse.quote(profile_id))
+                urllib.quote(profile_id))
 
             # Prepare the body of the message
             with open(file_path, 'rb') as body:
@@ -171,7 +172,7 @@ class IdentificationServiceHttpClientHelper:
             test_profile_ids_str = ','.join(test_profile_ids)
             request_url = '{0}?identificationProfileIds={1}'.format(
                 self._IDENTIFICATION_URI,
-                urlparse.quote(test_profile_ids_str))
+                urllib.quote(test_profile_ids_str))
 
             # Prepare the body of the message
             with open(file_path, 'rb') as body:

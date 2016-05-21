@@ -6,6 +6,7 @@ import datetime
 class Transaction(db.Model):
     __tablename__ = 'transactions'
     id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(128))
     from_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     to_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     amount = db.Column(db.Float)
@@ -14,9 +15,10 @@ class Transaction(db.Model):
     from_user = relationship('User', foreign_keys=[from_user_id])
     to_user = relationship('User', foreign_keys=[to_user_id])
 
-    def __init__(self, from_user_id, to_user_id, amount):
+    def __init__(self, from_user_id, to_user_id, description, amount):
         self.from_user_id = from_user_id
         self.to_user_id = to_user_id
+        self.description = description
         self.amount = amount
 
     def to_dict(self):
@@ -24,6 +26,7 @@ class Transaction(db.Model):
             'id': self.id,
             'fromUserId': self.from_user_id,
             'toUserId': self.to_user_id,
+            'description': self.description,
             'amount': self.amount,
             'fromUser': self.from_user,
             'toUser': self.to_user,

@@ -28,11 +28,10 @@
             <li class="menu-text">DextrousInc</li>
             <li><a href="/">Home</a></li>
             <li><a href="/users">Users</a></li>
-            <li><a href="/routes">Routes</a></li>
+            <li><a href="/">Routes</a></li>
             {% if session['user'] %}
-            <li><a href="/board-wait">Board Wait</a></li>
-            <li><a href="/board-me">Board</a></li>
-            <li><a href="/my-board">My Board</a></li>
+            <li><a href="/from-transactions">From transactions</a></li>
+            <li><a href="/to-transactions">To Transactions</a></li>
             {% endif %}
             <li><a href="/about-app"><i class="foundicon-location"></i>App</a></li>
         </ul>
@@ -47,10 +46,11 @@
                 <ul class="menu vertical">
                     {% if session['user'] %}
                         <li><a href="/my-profile">Profile</a></li>
+                        <li><a href="/process-command">Chat Bot</a></li>
                         <li><a href="/logout">Logout</a></li>
                     {% else %}
                         <li><a href="/login">Sign in</a></li>
-                        <li><a href="/login">Sign up</a></li>
+                        <li><a href="/register">Sign up</a></li>
                     {% endif %}
                 </ul>
             </li>
