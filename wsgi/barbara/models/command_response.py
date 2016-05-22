@@ -29,6 +29,6 @@ class CommandResponse():
             'referredUser': self.referred_user,
             'referredAmount': self.referred_amount,
             'responseText': self.response_text,
-            'associatedTime': self.time_associated,
+            'associatedTime': str(self.time_associated),
             'scheduledResponseText': self.scheduled_response_text,
         }

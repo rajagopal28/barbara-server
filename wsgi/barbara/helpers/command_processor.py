@@ -16,6 +16,8 @@ READ_OPERATION_TYPE_SEND = ['send', 'transfer', 'pay', 'sent', 'transferred', 'p
 READ_OPERATION_TYPE_RECEIVE = ['receive', 'got', 'get']
 
 RELATIVE_TIME_REFERENCES = ['last week', 'last month', 'yesterday', 'today', 'tomorrow', 'next week', 'next month']
+MONTHS_OF_YEAR = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
+                  'november', 'december']
 
 IDENTIFYING_SELF = ['me', 'my']
 CURRENT_BALANCE_IDENTIFIERS = ['current', 'balance', 'outstanding', 'bill']
@@ -48,7 +50,6 @@ def process_command(command_sentence):
     command_sentence = replace_words_in_phrases(command_sentence, DEFER_TRANSFER_IDENTIFIERS)
     # remove reminder identifiers
     command_sentence = replace_words_in_phrases(command_sentence, REMINDER_IDENTIFIERS)
-    print command_sentence
     command_response.is_current_balance_request = check_current_balance_request(command_sentence)
     command_response.is_credit_account = check_account_credit(command_sentence)
     if check_account_self(command_sentence):
@@ -57,28 +58,34 @@ def process_command(command_sentence):
         # get name from the string
         command_response.referred_user = extract_user_name_from_sentence(command_sentence)
     command_response.referred_amount = extract_amount_from_sentence(command_sentence)
-    if command_response.referred_amount != AMOUNT_REFERENCE_NONE and not str(command_response.referred_amount).isdigit():
+    if command_response.referred_amount != AMOUNT_REFERENCE_NONE and not str(
+            command_response.referred_amount).isdigit():
         command_response.referred_amount = get_number_to_text_amount(command_response.referred_amount)
     command_response.is_read_sent_transaction = check_read_sent_transaction(command_sentence)
     command_response.time_associated = get_time_from_reference(command_sentence)
-    command_response.response_text = get_message_for_response(command_response)
+    # remove time references
+    command_sentence = remove_time_context_from_sentence(command_sentence)
+    command_response.response_text = get_message_for_response(command_response, command_sentence)
     return command_response
 
 
-def get_message_for_response(command_response):
+def get_message_for_response(command_response, command_sentence):
     message = None
-    if command_response.is_reminder_request:
+    if command_response.is_reminder_request and command_response.referred_user and command_response.referred_amount:
         message = 'Reminding you to transfer' + command_response.referred_amount \
                   + ' to ' + command_response.referred_user \
                   + ' on ' + str(command_response.time_associated)
+    if command_response.is_reminder_request and not (
+                command_response.referred_user and command_response.referred_amount):
+        message = 'Reminding you to ' + command_sentence \
+                  + ' on ' + str(command_response.time_associated)
     elif command_response.is_schedule_request:
         if command_response.referred_amount and command_response.referred_user != ACCOUNT_SELF:
-            message = 'Scheduling a transfer of ' + command_response.referred_amount\
+            message = 'Scheduling a transfer of ' + command_response.referred_amount \
                       + ' to ' + command_response.referred_user \
                       + ' on ' + str(command_response.time_associated)
         else:
             'Oops!! Mis-interpretation.. Try again!!'
-
     elif command_response.is_read_request:
         if command_response.is_credit_account and command_response.is_current_balance_request:
             message = 'Reading your credit card outstanding'
@@ -97,7 +104,15 @@ def get_message_for_response(command_response):
         else:
             message = 'Transferring ' + command_response.referred_amount + ' to ' \
                       + command_response.referred_user + ' now'
+    else:
+        message = 'Oops!! Mis-interpretation.. Try again!!'
     return message
+
+
+def remove_time_context_from_sentence(sentence):
+    sentence = remove_words_from_sentence(sentence, [IDENTIFIER_ON])
+    # remove absolute time reference
+    return remove_words_from_sentence(sentence, RELATIVE_TIME_REFERENCES)
 
 
 def index_of_item_in_list(list_to_search, item_to_search):
@@ -146,15 +161,23 @@ def replace_words_in_phrases(sentence, words):
 
 def get_time_from_reference(sentence):
     index = sentence.find(IDENTIFIER_ON)
-    date_reference = None
+    now = datetime.date.today()
+    date_reference = now
     if index != -1:
         # absolute reference
-        some_time_string = sentence[index + 2: len(sentence)]
+        some_time_string = sentence[index + 3: len(sentence)]  # till end of sentence
+        splits = some_time_string.strip().split()
+        day_ref = int(splits[0])
+        month_ref = splits[1]
+        month_index = index_of_item_in_list(MONTHS_OF_YEAR, month_ref)
+        current_year = now.year
+        if month_index > now.month:
+            current_year -= 1
+        date_reference = datetime.date(current_year, month_index + 1, day_ref)
         # 24 JAN
     else:
         # relative reference
         time_reference = get_string_if_present_in_sentence(sentence, RELATIVE_TIME_REFERENCES)
-        now = datetime.date.today()
         if time_reference:
             # check what the reference is
             if time_reference == 'yesterday':
@@ -173,10 +196,6 @@ def get_time_from_reference(sentence):
                 date_reference = now + datetime.timedelta(days=7)
             elif time_reference == 'next month':
                 date_reference = now + datetime.timedelta(days=30)
-            else:
-                date_reference = now
-        else:
-            date_reference = now
     return date_reference
 
 

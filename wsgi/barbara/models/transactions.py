@@ -28,8 +28,8 @@ class Transaction(db.Model):
             'toUserId': self.to_user_id,
             'description': self.description,
             'amount': self.amount,
-            'fromUser': self.from_user,
-            'toUser': self.to_user,
+            'fromUser': self.from_user.to_dict(),
+            'toUser': self.to_user.to_dict(),
             'createdTS': self.created_ts,
             'lastUpdatedTS': self.last_updated_ts
         }
