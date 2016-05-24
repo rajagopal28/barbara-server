@@ -1,10 +1,12 @@
 from flask import render_template, session, request, jsonify
+import datetime
 from barbara import app, db
 
 from barbara.models.users import User
 from barbara.models.transactions import Transaction
 from barbara.models.credit_transactions import CreditTransaction
 from barbara.helpers.command_processor import process_command, find_substring
+from barbara.helpers.mail_processor import read_email
 
 
 @app.route("/from-transactions", methods=['GET'])
@@ -69,9 +71,9 @@ def process_user_command():
         _user_id = session['user']['id']
         if request.method == 'POST':
             _input_command = request.form['command']
-            _command_response = process_command(_input_command)
+            _command_response = process_command(command_sentence=_input_command)
             print _command_response.to_dict()
-            _command_response = process_command_response(_command_response, _user_id)
+            _command_response = process_command_response(command_response=_command_response, user_id=_user_id)
         return render_template('chat-bot.html', command_response=_command_response)
 
 
@@ -95,10 +97,15 @@ def authenticate_user_command():
         return render_template('chat-bot.html', command_response=_command_response)
 
 
-def process_command_response(command_response, user_id):
+def process_command_response(command_response, user_id, budget=None):
     if command_response.is_reminder_request:
         # do nothing
         pass
+    elif command_response.is_promotions_check:
+        if len(command_response.response_text) > 0:
+            # check promotions mail
+            read_email(command_response.response_text)
+            pass
     elif command_response.is_schedule_request:
         if command_response.referred_amount and command_response.referred_user != 'self':
             # do nothing
@@ -131,9 +138,10 @@ def process_command_response(command_response, user_id):
             _transfers = [transfer for transfer in _transfers if
                           transfer.from_user.first_name.lower() == command_response.referred_user or transfer.from_user.last_name.lower() == command_response.referred_user]
             if len(_transfers) > 0:
-                command_response.response_text = 'Yeah, You received ' + str(_transfers[0].amount) \
-                                                 + ' from ' + _transfers[0].from_user.full_name() \
-                                                 + ' on ' + str(_transfers[0].created_ts)
+                command_response.response_text = 'Yeah. Got it.'
+                command_response.scheduled_response_text = 'Yeah, You received ' + str(_transfers[0].amount) \
+                                                           + ' from ' + _transfers[0].from_user.full_name() \
+                                                           + ' on ' + str(_transfers[0].created_ts)
             else:
                 command_response.response_text = 'No such transaction!'
 
@@ -144,8 +152,40 @@ def process_command_response(command_response, user_id):
             command_response.scheduled_response_text = 'pay my credit card bill'
         else:
             command_response.scheduled_response_text = 'transfer ' + command_response.referred_amount + ' to ' \
-                                             + command_response.referred_user + ' now'
+                                                       + command_response.referred_user + ' now'
+    elif command_response.is_budget_check:
+        if command_response.is_budget_change:
+            # change the budget for this user
+            command_response.response_text = 'Budget set to ' + command_response.response_text
+        elif budget:
+            # get the budget parameter from the request of whatever
+            total_this_month_spend = total_spend_transactions(user_id)
+            if budget >= total_this_month_spend:
+                command_response.response_text = 'We are Cool on this month budget. Have fun.'
+                # get investment plans here for the difference amount
+                command_response.scheduled_response_text = 'Here are the list of investments you might like.'
+            else:
+                command_response.response_text = 'Oops! We have spent more than we should.'
+                difference = total_this_month_spend - budget
+                command_response.scheduled_response_text = 'We spent ' \
+                                                           + str(difference) \
+                                                           + ' more. Be cautious dude.'
+        else:
+            command_response.response_text = 'Hey, You\'ve not set any budget. What budget should I set?'
+    elif command_response.is_promotions_check:
+        # get promotions from email
+        command_response.response_text = 'Here are some matching promotions for : ' + command_response.response_text
     return command_response
+
+
+def total_spend_transactions(user_id):
+    month_start = datetime.datetime.now()
+    month_start = month_start - datetime.timedelta(days=month_start.day)
+    _transactions = Transaction.query.filter_by(from_user_id=user_id).filter(Transaction.created_ts >= month_start)
+    total_spend = 0
+    for transaction in _transactions:
+        total_spend += transaction.amount
+    return total_spend
 
 
 def pay_credit_card_bill(user_id):

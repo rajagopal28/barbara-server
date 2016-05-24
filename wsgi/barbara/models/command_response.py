@@ -7,6 +7,9 @@ class CommandResponse():
     is_schedule_request = False
     is_reminder_request = False
     is_credit_account = False
+    is_budget_check = False
+    is_budget_change = False
+    is_promotions_check = False
     referred_user = None
     referred_amount = None
     response_text = None
@@ -26,6 +29,9 @@ class CommandResponse():
             'isScheduleRequest': self.is_schedule_request,
             'isReminderRequest': self.is_reminder_request,
             'isCreditAccount': self.is_credit_account,
+            'isBudgetCheck': self.is_budget_check,
+            'isBudgetChange': self.is_budget_change,
+            'isPromotionsCheck': self.is_promotions_check,
             'referredUser': self.referred_user,
             'referredAmount': self.referred_amount,
             'responseText': self.response_text,

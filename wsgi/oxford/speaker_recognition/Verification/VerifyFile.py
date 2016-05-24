@@ -1,6 +1,7 @@
 import VerificationServiceHttpClientHelper
 import sys
 
+
 def verify_file(subscription_key, file_path, profile_id):
     """verify a profile based on submitted audio sample
 
@@ -10,10 +11,11 @@ def verify_file(subscription_key, file_path, profile_id):
     profile_id -- ID of a profile to attempt to match the audio sample to
     """
     helper = VerificationServiceHttpClientHelper.VerificationServiceHttpClientHelper(
-        subscription_key)
+            subscription_key)
     verification_response = helper.verify_file(file_path, profile_id)
     print('Verification Result = {0}'.format(verification_response.get_result()))
     print('Confidence = {0}'.format(verification_response.get_confidence()))
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:

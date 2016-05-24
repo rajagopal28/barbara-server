@@ -27,6 +27,10 @@ IDENTIFIER_FROM = 'from'
 IDENTIFIER_ON = ' on '
 DEFER_TRANSFER_IDENTIFIERS = ['schedule to', 'schedule']
 REMINDER_IDENTIFIERS = ['remind me to', 'remind me', 'remind']
+BUDGET_IDENTIFIERS = ['budget']
+SET_BUDGET_IDENTIFIERS = ['set budget to']
+PROMOTIONS_IDENTIFIERS = ['like to buy', 'promotions on']
+PROMOTION_REPLACEMENT = 'promotion_content'
 ACCOUNT_SELF = 'self'
 AMOUNT_REFERENCE_NONE = 'money'
 AMOUNT_REFERENCES = [{'hundred': 100}, {'thousand': 1000}, {'fifty': 50}, {'twenty': 20}, {'ten': 10}]
@@ -62,20 +66,32 @@ def process_command(command_sentence):
             command_response.referred_amount).isdigit():
         command_response.referred_amount = get_number_to_text_amount(command_response.referred_amount)
     command_response.is_read_sent_transaction = check_read_sent_transaction(command_sentence)
+    # is this promotions check
+    command_response.is_promotions_check = check_promotions_enquiry(command_sentence)
+    print command_response.is_promotions_check
+    # remove promotion references
+    command_sentence = remove_promotions_context_from_sentence(command_sentence)
     command_response.time_associated = get_time_from_reference(command_sentence)
     # remove time references
     command_sentence = remove_time_context_from_sentence(command_sentence)
+    # is this budget check
+    command_response.is_budget_check = check_budget_enquiry(command_sentence)
+    command_response.is_budget_change = check_budget_change(command_sentence)
     command_response.response_text = get_message_for_response(command_response, command_sentence)
     return command_response
 
 
 def get_message_for_response(command_response, command_sentence):
     message = None
-    if command_response.is_reminder_request and command_response.referred_user and command_response.referred_amount:
+    if command_response.is_promotions_check:
+        message = extract_promotions_from_sentence(command_sentence).strip()
+    if command_response.is_budget_check and command_response.is_budget_change:
+        message = extract_budget_from_sentence(command_sentence).strip()
+    elif command_response.is_reminder_request and command_response.referred_user and command_response.referred_amount:
         message = 'Reminding you to transfer' + command_response.referred_amount \
                   + ' to ' + command_response.referred_user \
                   + ' on ' + str(command_response.time_associated)
-    if command_response.is_reminder_request and not (
+    elif command_response.is_reminder_request and not (
                 command_response.referred_user and command_response.referred_amount):
         message = 'Reminding you to ' + command_sentence \
                   + ' on ' + str(command_response.time_associated)
@@ -110,8 +126,11 @@ def get_message_for_response(command_response, command_sentence):
 
 
 def remove_time_context_from_sentence(sentence):
-    sentence = remove_words_from_sentence(sentence, [IDENTIFIER_ON])
+    index = sentence.find(IDENTIFIER_ON)
     # remove absolute time reference
+    if index != -1:
+        sentence = sentence[0:index]
+    sentence = remove_words_from_sentence(sentence, [IDENTIFIER_ON])
     return remove_words_from_sentence(sentence, RELATIVE_TIME_REFERENCES)
 
 
@@ -121,6 +140,10 @@ def index_of_item_in_list(list_to_search, item_to_search):
     if len(_te) > 0:
         _index = _te[0]
     return _index
+
+
+def remove_promotions_context_from_sentence(sentence):
+    return remove_phrase_from_sentence(sentence, PROMOTIONS_IDENTIFIERS, PROMOTION_REPLACEMENT)
 
 
 def extract_user_name_from_sentence(sentence):
@@ -143,6 +166,23 @@ def extract_amount_from_sentence(sentence):
     if index != -1 and index > 0:
         some_name_string = words[index - 1]
     return some_name_string
+
+
+def extract_promotions_from_sentence(sentence):
+    chosen_word = DELIMITER_WHITE_SPACE
+    found_index = sentence.find(PROMOTION_REPLACEMENT)
+    if found_index != -1:
+        chosen_word = sentence[found_index + len(PROMOTION_REPLACEMENT): len(sentence)]
+    return chosen_word
+
+
+def extract_budget_from_sentence(sentence):
+    chosen_word = DELIMITER_WHITE_SPACE
+    replacement = SET_BUDGET_IDENTIFIERS[0]
+    found_index = sentence.find(replacement)
+    if found_index != -1:
+        chosen_word = sentence[found_index + len(replacement): len(sentence)]
+    return chosen_word
 
 
 def get_string_if_present_in_sentence(sentence, words_to_search):
@@ -223,6 +263,18 @@ def check_transaction_request(sentence):
     return check_sentence_has_words_in_list(sentence, READ_OPERATION_TYPE_SEND)
 
 
+def check_budget_enquiry(sentence):
+    return check_sentence_has_words_in_list(sentence, BUDGET_IDENTIFIERS)
+
+
+def check_budget_change(sentence):
+    return check_sentence_has_words_in_list(sentence, SET_BUDGET_IDENTIFIERS)
+
+
+def check_promotions_enquiry(sentence):
+    return check_sentence_has_words_in_list(sentence, PROMOTIONS_IDENTIFIERS)
+
+
 def is_greeting_present(sentence):
     return check_sentence_has_words_in_list(sentence, GREETING_TEXTS)
 
@@ -241,6 +293,12 @@ def check_sentence_has_words_in_list(sentence, words_list):
 
 def remove_words_from_sentence(sentence, words_to_remove):
     return DELIMITER_WHITE_SPACE.join([i for i in sentence.split() if i not in words_to_remove])
+
+
+def remove_phrase_from_sentence(sentence, phrases_to_remove, replacement=''):
+    for phrase in phrases_to_remove:
+        sentence = sentence.replace(phrase, replacement)
+    return sentence
 
 
 def remove_greetings_from_sentence(sentence):
