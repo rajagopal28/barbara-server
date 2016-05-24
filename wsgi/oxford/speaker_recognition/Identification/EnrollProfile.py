@@ -51,7 +51,7 @@ def enroll_profile(subscription_key, profile_id, file_path):
     print('Remaining Enrollment Time = {0}'.format(enrollment_response.get_remaining_speech_time()))
     print('Speech Time = {0}'.format(enrollment_response.get_speech_time()))
     print('Enrollment Status = {0}'.format(enrollment_response.get_enrollment_status()))
-
+    return enrollment_response
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:

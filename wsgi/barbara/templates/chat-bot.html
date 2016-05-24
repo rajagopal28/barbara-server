@@ -24,6 +24,9 @@
                 {% if command_response.response_text %}
                     {{ command_response.response_text }}
                 {% endif %}
+                {% if command_response.scheduled_response_text %}
+                    {{ command_response.scheduled_response_text }}
+                {% endif %}
             </div>
         </div>
     </div>

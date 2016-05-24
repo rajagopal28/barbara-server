@@ -14,10 +14,10 @@ SEARCH_TYPE_ALL = 'ALL'
 SORT_RECENT_FIRST = 'REVERSE DATE'  # Descending, most recent email first
 ENCODING_UTF_8 = 'UTF-8'
 MAIL_TIME_FRAME = 30  # <-- days one month email only
-M = imaplib.IMAP4_SSL('imap.gmail.com')
 
 
 def read_email(search_pattern):
+    M = imaplib.IMAP4_SSL('imap.gmail.com')
     try:
         M.login(USER_EMAIL, USER_PASSWORD)
     except imaplib.IMAP4.error:

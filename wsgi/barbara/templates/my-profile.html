@@ -18,11 +18,6 @@
         </div>
         <div class="row">
             <div class="small-4 columns">
-                <h4>Email: </h4></div>
-            <div class="medium-6 large-8 columns"><a href="mailto:{{ user.email }}">{{ user.email }}</a></div>
-        </div>
-        <div class="row">
-            <div class="small-4 columns">
                 <h4>username: </h4></div>
             <div class="medium-6 large-8 columns">{{ user.username }}</div>
         </div>
@@ -35,6 +30,23 @@
             <div class="small-4 columns">
                 <h4>Credit: </h4></div>
             <div class="medium-6 large-8 columns">{{ user.credit }} {{ user.currency_type }}</div>
+        </div>
+        <hr/>
+        <h3> Preferences</h3>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Nick name: </h4></div>
+            <div class="medium-6 large-8 columns">{{user.preferences.nick_name}}</div>
+        </div>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Budget: </h4></div>
+            <div class="medium-6 large-8 columns">{{user.preferences.budget}}</div>
+        </div>
+        <div class="row">
+            <div class="small-4 columns">
+                <h4>Security Question: </h4></div>
+            <div class="medium-6 large-8 columns">{{user.preferences.security_question}}</div>
         </div>
     {% endif %}
 {% endblock %}

@@ -33,6 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import IdentificationServiceHttpClientHelper
 import sys
 
+
 def identify_file(subscription_key, file_path, profile_ids):
     """Identify an audio file on the server.
 
@@ -42,10 +43,12 @@ def identify_file(subscription_key, file_path, profile_ids):
     profile_ids -- an array of test profile IDs strings
     """
     helper = IdentificationServiceHttpClientHelper.IdentificationServiceHttpClientHelper(
-        subscription_key)
+            subscription_key)
     identification_response = helper.identify_file(file_path, profile_ids)
     print('Identified Speaker = {0}'.format(identification_response.get_identified_profile_id()))
     print('Confidence = {0}'.format(identification_response.get_confidence()))
+    return identification_response
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:

@@ -1,12 +1,20 @@
 from flask import render_template, session, request, jsonify
 import datetime
+from werkzeug import secure_filename
+from os import remove, path
 from barbara import app, db
 
 from barbara.models.users import User
+from barbara.models.user_preferences import UserPreference
 from barbara.models.transactions import Transaction
 from barbara.models.credit_transactions import CreditTransaction
 from barbara.helpers.command_processor import process_command, find_substring
 from barbara.helpers.mail_processor import read_email
+
+from oxford.speaker_recognition.Verification.VerifyFile import verify_file
+
+VERIFICATION_RESULT_ACCEPT = 'Accept'
+VERIFICATION_CONFIDENCE = ['Low', 'Normal', 'High']
 
 
 @app.route("/from-transactions", methods=['GET'])
@@ -61,7 +69,7 @@ def process_app_user_command():
     _command_response = process_command(_input_command)
     _command_response = process_command_response(_command_response, _user_id)
     result = _command_response.to_dict()
-    return jsonify(items=result, success=True)
+    return jsonify(item=result, success=True)
 
 
 @app.route("/process-command", methods=['GET', 'POST'])
@@ -74,7 +82,49 @@ def process_user_command():
             _command_response = process_command(command_sentence=_input_command)
             print _command_response.to_dict()
             _command_response = process_command_response(command_response=_command_response, user_id=_user_id)
+            db.session.add(_command_response)
+            db.session.commit()
         return render_template('chat-bot.html', command_response=_command_response)
+
+
+@app.route("/api/users/authenticate-transfer", methods=['POST'])
+def voice_verification():
+    # receive voice file from request
+    _user_id = request.form['userId']
+    _command_sentence = request.form['command']
+    user = User.query.filter_by(id=_user_id).first()
+    _file = request.files['file']
+    result = None
+    user_verified = False
+    if _file and user:
+        filename = secure_filename(_file.filename)
+        # print app.config['UPLOAD_FOLDER']
+        _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
+        _file.save(_created_file_path)
+        print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+        print user.speaker_profile_id
+        print _created_file_path
+        verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                            user.speaker_profile_id)
+        remove(_created_file_path)
+        _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
+        user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
+        user_verified = user_verified and (_index != -1)
+        if user_verified and _command_sentence:
+            command_response = process_command(_command_sentence)
+            if command_response.is_credit_account:
+                pay_credit_card_bill(_user_id)
+                command_response.response_text = 'Done paying your credit card outstanding'
+            else:
+                transfer_amount_to_user(_user_id, command_response.referred_user, command_response.referred_amount)
+                command_response.response_text = 'Done transferring ' + command_response.referred_amount + ' to ' \
+                                                 + command_response.referred_user
+            result = command_response.to_dict()
+            # add the command to database
+            db.session.add(command_response)
+            db.session.commit()
+    # register with the current user's speaker profile
+    return jsonify(success=user_verified, item=result)
 
 
 @app.route("/authenticate-transfer", methods=['POST'])
@@ -97,7 +147,7 @@ def authenticate_user_command():
         return render_template('chat-bot.html', command_response=_command_response)
 
 
-def process_command_response(command_response, user_id, budget=None):
+def process_command_response(command_response, user_id):
     if command_response.is_reminder_request:
         # do nothing
         pass
@@ -152,12 +202,23 @@ def process_command_response(command_response, user_id, budget=None):
             command_response.scheduled_response_text = 'pay my credit card bill'
         else:
             command_response.scheduled_response_text = 'transfer ' + command_response.referred_amount + ' to ' \
-                                                       + command_response.referred_user + ' now'
+                                                       + command_response.referred_user
     elif command_response.is_budget_check:
+        _user_preference = UserPreference.query.filter_by(user_id=user_id).first()
+        if _user_preference is None:
+            _user_preference = UserPreference(user_id=user_id)
+            db.session.add(_user_preference)
+            # create new and add if not present
+        budget = _user_preference.budget
         if command_response.is_budget_change:
             # change the budget for this user
-            command_response.response_text = 'Budget set to ' + command_response.response_text
-        elif budget:
+            new_budget = 0
+            if command_response.response_text.isdigit():
+                new_budget = float(command_response.response_text)
+            command_response.response_text = 'Budget set to ' + str(new_budget)
+            _user_preference.budget = new_budget
+            db.session.commit()
+        elif budget and budget > 0:
             # get the budget parameter from the request of whatever
             total_this_month_spend = total_spend_transactions(user_id)
             if budget >= total_this_month_spend:

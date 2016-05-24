@@ -7,8 +7,6 @@ from barbara import app, db
 from barbara.models.users import User
 from oxford.speaker_recognition.Verification.CreateProfile import create_profile
 from oxford.speaker_recognition.Verification.EnrollProfile import enroll_profile
-from oxford.speaker_recognition.Verification.VerifyFile import verify_file
-from oxford.speaker_recognition.Verification.PrintAllProfiles import print_all_profiles
 
 
 @app.route("/users")
@@ -78,31 +76,8 @@ def voice_enrollment():
             print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
             print user.speaker_profile_id
             print _created_file_path
-            enroll_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], user.speaker_profile_id, _created_file_path)
-            remove(_created_file_path)
-        # register with the current user's speaker profile
-        return redirect(url_for('home'))
-    else:
-        return render_template('post-voice.html')
-
-
-@app.route("/authenticate-voice", methods=['POST', 'GET'])
-def voice_verification():
-    # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
-    if request.method == 'POST':
-        # receive voice file from request
-        _user_id = request.form['userId']
-        user = User.query.filter_by(id=_user_id).first()
-        _file = request.files['file']
-        if _file and user:
-            filename = secure_filename(_file.filename)
-            # print app.config['UPLOAD_FOLDER']
-            _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
-            _file.save(_created_file_path)
-            print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
-            print user.speaker_profile_id
-            print _created_file_path
-            verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path, user.speaker_profile_id)
+            verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                                user.speaker_profile_id)
             remove(_created_file_path)
         # register with the current user's speaker profile
         return redirect(url_for('home'))
