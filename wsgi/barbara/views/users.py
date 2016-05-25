@@ -5,8 +5,10 @@ from os import path, remove
 from barbara import app, db
 
 from barbara.models.users import User
+from barbara.models.user_preferences import UserPreference
 from oxford.speaker_recognition.Verification.CreateProfile import create_profile
 from oxford.speaker_recognition.Verification.EnrollProfile import enroll_profile
+from oxford.speaker_recognition.Verification.VerifyFile import verify_file
 
 
 @app.route("/users")
@@ -117,7 +119,38 @@ def add_user():
                     speaker_profile_id=_speaker_profile_id)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify(success=True, result=new_user.to_dict())
+    return jsonify(success=True, item=new_user.to_dict())
+
+
+@app.route("/api/users/save-preferences", methods=['POST'])
+def save_user_preferences():
+    _user_id = request.form['userId']
+    _budget = request.form['budget']
+    _security_question = request.form['securityQuestion']
+    _nick_name = request.form['nickName']
+    if _user_id:
+        user_preference = UserPreference.query.filter_by(user_id=_user_id).first()
+        if not user_preference:
+            user_preference = UserPreference(user_id=_user_id)
+            db.session.add(user_preference)
+        if _budget:
+            user_preference.budget = float(_budget)
+        if _nick_name:
+            user_preference.nick_name = _nick_name
+        if _security_question:
+            user_preference.security_question = _security_question
+        db.session.commit()
+        return jsonify(success=True, item=user_preference.to_dict())
+    return jsonify(success=False, item=None)
+
+
+@app.route("/api/users/preferences", methods=['GET'])
+def get_user_preferences():
+    _user_id = request.args['userId']
+    if _user_id:
+        user_preference = UserPreference.query.filter_by(user_id=_user_id).first()
+        return jsonify(success=True, item=user_preference.to_dict())
+    return jsonify(success=False, item=None)
 
 
 @app.route("/api/login", methods=['POST'])

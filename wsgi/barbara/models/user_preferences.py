@@ -12,7 +12,7 @@ class UserPreference(db.Model):
     budget = db.Column(db.Float, default=0.0)
     created_ts = db.Column(db.DateTime, default=datetime.datetime.now())
     last_updated_ts = db.Column(db.DateTime, default=datetime.datetime.now())
-    user = relationship('User', back_populates='preferences')
+    user = relationship('User', back_populates='preferences', uselist=False, foreign_keys=[user_id])
 
     def __init__(self, user_id, nick_name=None, security_question=None, budget=0):
         self.user_id = user_id
@@ -20,14 +20,14 @@ class UserPreference(db.Model):
         self.security_question = security_question
         self.budget = budget
 
-    def to_dict(self):
+    def to_dict(self, ignore_user=False):
         return {
             'id': self.id,
-            'userId': self.user_if,
+            'userId': self.user_id,
             'nickName': self.nick_name,
             'securityQuestion': self.security_question,
             'budget': self.budget,
-            'user': self.user.to_dict(),
+            'user': self.user.to_dict() if not ignore_user else None,
             'createdTS': self.created_ts,
             'lastUpdatedTS': self.last_updated_ts,
         }

@@ -147,6 +147,26 @@ def authenticate_user_command():
         return render_template('chat-bot.html', command_response=_command_response)
 
 
+@app.route("/api/transactions/execute-verified-transfer", methods=['POST'])
+def execute_verified_transfer():
+    _command_response = None
+    if session['user']:
+        user_id = session['user']['id']
+        is_credit_account = request.form['isCreditAccount']
+        referred_user = request.form['referredUser']
+        referred_amount = request.form['referredAmount']
+        command_response = object
+        command_response.response_text = None
+        if is_credit_account == 'true':
+            pay_credit_card_bill(user_id)
+            command_response.response_text = 'Done paying your credit card outstanding'
+        else:
+            transfer_amount_to_user(user_id, referred_user, referred_amount)
+            command_response.response_text = 'Done transferring ' + referred_amount + ' to ' \
+                                             + referred_user + ' now'
+        return render_template('chat-bot.html', command_response=_command_response)
+
+
 def process_command_response(command_response, user_id):
     if command_response.is_reminder_request:
         # do nothing
@@ -157,9 +177,18 @@ def process_command_response(command_response, user_id):
             read_email(command_response.response_text)
             pass
     elif command_response.is_schedule_request:
-        if command_response.referred_amount and command_response.referred_user != 'self':
-            # do nothing
-            pass
+        if command_response.is_transaction_request:
+            # send a response so that the user inputs password
+            _user_preference = UserPreference.query.filter_by(user_id=user_id).first()
+            _command_suffix = 'Authenticate.'
+            if _user_preference and _user_preference.security_question:
+                _command_suffix = _user_preference.security_question
+            command_response.response_text = 'Processing...' + _command_suffix
+            if command_response.is_credit_account:
+                command_response.scheduled_response_text = 'pay my credit card bill'
+            elif command_response.referred_amount and command_response.referred_user and command_response.referred_user != 'self':
+                command_response.scheduled_response_text = 'transfer ' + command_response.referred_amount + ' to ' \
+                                                           + command_response.referred_user
     elif command_response.is_read_request:
         if command_response.is_credit_account and command_response.is_current_balance_request:
             _user = User.query.filter_by(id=user_id).first()
@@ -197,7 +226,11 @@ def process_command_response(command_response, user_id):
 
     elif command_response.is_transaction_request:
         # send a response so that the user inputs password
-        command_response.response_text = 'Processing...'
+        _user_preference = UserPreference.query.filter_by(user_id=user_id).first()
+        _command_suffix = 'Authenticate.'
+        if _user_preference and _user_preference.security_question:
+            _command_suffix = _user_preference.security_question
+        command_response.response_text = 'Processing...' + _command_suffix
         if command_response.is_credit_account:
             command_response.scheduled_response_text = 'pay my credit card bill'
         else:

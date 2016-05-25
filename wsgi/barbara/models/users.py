@@ -17,7 +17,7 @@ class User(db.Model):
     speaker_profile_id = db.Column(db.String(128))
     created_ts = db.Column(db.DateTime, default=datetime.datetime.now())
     last_updated_ts = db.Column(db.DateTime, default=datetime.datetime.now())
-    preferences = relationship('UserPreference', back_populates='user')
+    preferences = relationship('UserPreference', back_populates='user', uselist=False)
 
     def __init__(self, first_name, last_name, username, password, currency_type, wallet, credit, speaker_profile_id):
         self.first_name = first_name
@@ -47,6 +47,6 @@ class User(db.Model):
             'wallet': self.wallet,
             'credit': self.credit,
             'createdTS': self.created_ts,
-            'preferences' : self.preferences.to_dict(),
+            'preferences': self.preferences.to_dict(ignore_user=True) if self.preferences else None,
             'lastUpdatedTS': self.last_updated_ts,
         }
