@@ -1,26 +1,30 @@
 {% extends "layout.html" %}
 {% block body %}
-<h2>Your travel History</h2>
-<table>
-  <thead>
-    <tr>
-      <th width="20%">From</th>
-      <th width="20%">To</th>
-      <th width="20%">Desc</th>
-      <th width="20%">Amount</th>
-      <th width="20%">Transferred On</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for transaction in user_transactions %}
-    <tr>
-      <td>{{ transaction.from_user.full_name()}}</td>
-      <td>{{ transaction.to_user.full_name()}}</td>
-      <td>{{ transaction.description}}</td>
-      <td>{{ transaction.amount}}</td>
-      <td>{{ transaction.created_ts}}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
+    {% if user_transactions %}
+        <h2>Your Transaction History</h2>
+        <table>
+          <thead>
+            <tr>
+              <th width="20%">From</th>
+              <th width="20%">To</th>
+              <th width="20%">Desc</th>
+              <th width="20%">Amount</th>
+              <th width="20%">Transferred On</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for transaction in user_transactions %}
+            <tr>
+              <td>{{ transaction.from_user.full_name()}}</td>
+              <td>{{ transaction.to_user.full_name()}}</td>
+              <td>{{ transaction.description}}</td>
+              <td>{{ transaction.amount}}</td>
+              <td>{{ transaction.created_ts}}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+    {% else %}
+        <h2>No Transaction to display</h2>
+    {% endif %}
 {% endblock %}

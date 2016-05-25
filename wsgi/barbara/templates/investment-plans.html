@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block body %}
+    {% if plans %}
+        <h2>Current available plans</h2>
+        <table>
+            <thead>
+            <tr>
+                <th width="25%">ID</th>
+                <th width="25%">Description</th>
+                <th width="25%">Amount</th>
+                <th width="25%">Created</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for plan in plans %}
+                <tr>
+                    <td>{{ plan.id }}</td>
+                    <td>{{ plan.description }}</td>
+                    <td>{{ plan.amount }}</td>
+                    <td>{{ plan.created_ts }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <h2>No Transaction to display</h2>
+    {% endif %}
+{% endblock %}

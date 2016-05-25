@@ -6,6 +6,9 @@ from barbara import app, db
 
 from barbara.models.users import User
 from barbara.models.user_preferences import UserPreference
+from barbara.models.invetment_plans import InvestmentPlan
+
+
 from oxford.speaker_recognition.Verification.CreateProfile import create_profile
 from oxford.speaker_recognition.Verification.EnrollProfile import enroll_profile
 from oxford.speaker_recognition.Verification.VerifyFile import verify_file
@@ -162,3 +165,9 @@ def login():
         return jsonify(success=True, item=user.to_dict())
     else:
         return jsonify(success=False, error='Invalid user credentials!!')
+
+
+@app.route("/investment-plans", methods=['GET'])
+def investment_plans():
+    _plans = InvestmentPlan.query.all()
+    return render_template('investment-plans.html', plans=_plans)

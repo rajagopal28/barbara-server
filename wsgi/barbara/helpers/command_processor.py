@@ -85,7 +85,7 @@ def get_message_for_response(command_response, command_sentence):
     message = None
     if command_response.is_promotions_check:
         message = extract_promotions_from_sentence(command_sentence).strip()
-    if command_response.is_budget_check and command_response.is_budget_change:
+    elif command_response.is_budget_check and command_response.is_budget_change:
         message = extract_budget_from_sentence(command_sentence).strip()
     elif command_response.is_reminder_request and command_response.referred_user and command_response.referred_amount:
         message = 'Reminding you to transfer' + command_response.referred_amount \
@@ -202,6 +202,7 @@ def replace_words_in_phrases(sentence, words):
 def get_time_from_reference(sentence):
     index = sentence.find(IDENTIFIER_ON)
     now = datetime.date.today()
+    # eod_time = datetime.time(23, 59, 0)
     date_reference = now
     if index != -1:
         # absolute reference
@@ -236,6 +237,7 @@ def get_time_from_reference(sentence):
                 date_reference = now + datetime.timedelta(days=7)
             elif time_reference == 'next month':
                 date_reference = now + datetime.timedelta(days=30)
+    # date_reference = datetime.datetime.combine(date_reference, eod_time)  # set time to end ot day i.e., 23:59:00
     return date_reference
 
 

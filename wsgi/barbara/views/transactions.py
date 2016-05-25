@@ -7,6 +7,7 @@ from barbara import app, db
 from barbara.models.users import User
 from barbara.models.user_preferences import UserPreference
 from barbara.models.transactions import Transaction
+from barbara.models.command_response import CommandResponse
 from barbara.models.credit_transactions import CreditTransaction
 from barbara.helpers.command_processor import process_command, find_substring
 from barbara.helpers.mail_processor import read_email
@@ -62,6 +63,15 @@ def get_user_to_transactions():
     return jsonify(items=result, success=True)
 
 
+@app.route("/api/transactions/credit/all")
+def get_user_credit_transactions():
+    _user_id = request.args['userId']
+    _user_transactions = CreditTransaction.query.filter_by(user_id=_user_id).order_by(
+            CreditTransaction.created_ts.desc()).all()
+    result = [transaction.to_dict() for transaction in _user_transactions]
+    return jsonify(items=result, success=True)
+
+
 @app.route("/api/command/process", methods=['POST'])
 def process_app_user_command():
     _user_id = request.form['userId']
@@ -101,9 +111,9 @@ def voice_verification():
         # print app.config['UPLOAD_FOLDER']
         _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
         _file.save(_created_file_path)
-        print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
-        print user.speaker_profile_id
-        print _created_file_path
+        # print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+        # print user.speaker_profile_id
+        # print _created_file_path
         verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
                                             user.speaker_profile_id)
         remove(_created_file_path)
@@ -129,42 +139,56 @@ def voice_verification():
 
 @app.route("/authenticate-transfer", methods=['POST'])
 def authenticate_user_command():
-    _command_response = None
     if session['user']:
         user_id = session['user']['id']
         is_credit_account = request.form['isCreditAccount']
         referred_user = request.form['referredUser']
         referred_amount = request.form['referredAmount']
-        command_response = object
-        command_response.response_text = None
-        if is_credit_account == 'true':
-            pay_credit_card_bill(user_id)
-            command_response.response_text = 'Done paying your credit card outstanding'
-        else:
-            transfer_amount_to_user(user_id, referred_user, referred_amount)
-            command_response.response_text = 'Done transferring ' + referred_amount + ' to ' \
-                                             + referred_user + ' now'
-        return render_template('chat-bot.html', command_response=_command_response)
+        user = User.query.filter_by(id=user_id).first()
+        _file = request.files['file']
+        if _file and user and referred_user and referred_amount:
+            filename = secure_filename(_file.filename)
+            # print app.config['UPLOAD_FOLDER']
+            _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
+            _file.save(_created_file_path)
+            # print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+            # print user.speaker_profile_id
+            # print _created_file_path
+            verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                                user.speaker_profile_id)
+            remove(_created_file_path)
+            _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
+            user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
+            user_verified = user_verified and (_index != -1)
+            if user_verified:
+                command_response = CommandResponse()
+                if is_credit_account == 'true':
+                    pay_credit_card_bill(user_id)
+                    command_response.response_text = 'Done paying your credit card outstanding'
+                else:
+                    transfer_amount_to_user(user_id, referred_user, referred_amount)
+                    command_response.response_text = 'Done transferring ' + referred_amount + ' to ' \
+                                                     + referred_user + ' now'
+                return render_template('chat-bot.html', command_response=command_response)
 
 
 @app.route("/api/transactions/execute-verified-transfer", methods=['POST'])
 def execute_verified_transfer():
     _command_response = None
-    if session['user']:
-        user_id = session['user']['id']
-        is_credit_account = request.form['isCreditAccount']
-        referred_user = request.form['referredUser']
-        referred_amount = request.form['referredAmount']
-        command_response = object
-        command_response.response_text = None
-        if is_credit_account == 'true':
+    if request.form['userId']:
+        user_id = request.form['userId']
+        _command_sentence = request.form['command']
+        command_response = process_command(_command_sentence)
+        if command_response.is_credit_account == 'true':
             pay_credit_card_bill(user_id)
             command_response.response_text = 'Done paying your credit card outstanding'
+            _status = True
         else:
-            transfer_amount_to_user(user_id, referred_user, referred_amount)
-            command_response.response_text = 'Done transferring ' + referred_amount + ' to ' \
-                                             + referred_user + ' now'
-        return render_template('chat-bot.html', command_response=_command_response)
+            transfer_amount_to_user(user_id, command_response.referred_user, command_response.referred_amount)
+            command_response.response_text = 'Done transferring %s to %s now' % (command_response.referred_amount,
+                                                                                 command_response.referred_user)
+            _status = True
+        return jsonify(success=_status, command_response=_command_response)
 
 
 def process_command_response(command_response, user_id):
@@ -172,10 +196,14 @@ def process_command_response(command_response, user_id):
         # do nothing
         pass
     elif command_response.is_promotions_check:
+        print command_response.response_text
         if len(command_response.response_text) > 0:
             # check promotions mail
-            read_email(command_response.response_text)
-            pass
+            promotions_key = command_response.response_text
+            promotions_list = read_email(promotions_key)
+            # get promotions from email
+            command_response.response_text = 'Here are some matching promotions on %s' % promotions_key
+            command_response.scheduled_response_text = ' %s' % promotions_list
     elif command_response.is_schedule_request:
         if command_response.is_transaction_request:
             # send a response so that the user inputs password
@@ -189,18 +217,18 @@ def process_command_response(command_response, user_id):
             elif command_response.referred_amount and command_response.referred_user and command_response.referred_user != 'self':
                 command_response.scheduled_response_text = 'transfer ' + command_response.referred_amount + ' to ' \
                                                            + command_response.referred_user
+    elif command_response.is_credit_account and command_response.is_current_balance_request:
+        _user = User.query.filter_by(id=user_id).first()
+        command_response.response_text = 'Your credit card outstanding is ' + _user.currency_type + ' ' + str(
+                _user.credit)
     elif command_response.is_read_request:
-        if command_response.is_credit_account and command_response.is_current_balance_request:
-            _user = User.query.filter_by(id=user_id).first()
-            command_response.response_text = 'Your credit card outstanding is ' + _user.currency_type + ' ' + str(
-                    _user.credit)
-        elif command_response.is_current_balance_request:
+        if command_response.is_current_balance_request:
             _user = User.query.filter_by(id=user_id).first()
             command_response.response_text = 'Your account balance is ' + _user.currency_type + ' ' + str(_user.wallet)
         elif command_response.is_read_sent_transaction:
             _transfers = Transaction.query.filter_by(from_user_id=user_id) \
-                .filter(Transaction.created_ts <= command_response.time_associated) \
-                .order_by(Transaction.created_ts.desc()).all()
+                .filter(Transaction.created_ts >= get_start_of_day(command_response.time_associated)) \
+                .order_by(Transaction.created_ts.asc()).all()
             _transfers = [transfer for transfer in _transfers if
                           transfer.to_user.first_name.lower() == command_response.referred_user or transfer.to_user.last_name.lower() == command_response.referred_user]
             if len(_transfers) > 0:
@@ -212,8 +240,8 @@ def process_command_response(command_response, user_id):
 
         elif command_response.referred_user != 'self':
             _transfers = Transaction.query.filter_by(to_user_id=user_id) \
-                .filter(Transaction.created_ts <= command_response.time_associated) \
-                .order_by(Transaction.created_ts.desc()).all()
+                .filter(Transaction.created_ts >= get_start_of_day(command_response.time_associated)) \
+                .order_by(Transaction.created_ts.asc()).all()
             _transfers = [transfer for transfer in _transfers if
                           transfer.from_user.first_name.lower() == command_response.referred_user or transfer.from_user.last_name.lower() == command_response.referred_user]
             if len(_transfers) > 0:
@@ -266,9 +294,6 @@ def process_command_response(command_response, user_id):
                                                            + ' more. Be cautious dude.'
         else:
             command_response.response_text = 'Hey, You\'ve not set any budget. What budget should I set?'
-    elif command_response.is_promotions_check:
-        # get promotions from email
-        command_response.response_text = 'Here are some matching promotions for : ' + command_response.response_text
     return command_response
 
 
@@ -304,3 +329,8 @@ def transfer_amount_to_user(current_user_id, referred_user, referred_amount):
     db.session.add(_transaction)
     # create transaction
     db.session.commit()
+
+
+def get_start_of_day(date_time_value):
+    sod_time = datetime.time(0, 0, 0)
+    return datetime.datetime.combine(date_time_value, sod_time)  # set time to end ot day i.e., 00:00:00
