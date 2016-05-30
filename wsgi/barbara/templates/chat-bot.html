@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
     <form
-            {% if command_response.is_transaction_request and not command_response.is_read_request%}
+            {% if command_response.is_transaction_request and not command_response.is_read_request %}
                 action="/authenticate-transfer"
             {% else %}
                 action=""
@@ -16,11 +16,18 @@
                 </div>
             </div>
         {% endif %}
+            <input type="hidden" name="startCommandId"
+                {% if current_session_command_start %}
+                   value="{{ current_session_command_start }}"
+                {% else %}
+                   value=""
+                {% endif %}
+            />
         <div class="row">
             <div class="large-4 medium-4 columns">
                 <label>Command</label>
                 <input type="text" name="command" class="input-xlarge"
-                        {% if command_response.is_transaction_request and not command_response.is_read_request%}
+                        {% if command_response.is_transaction_request and not command_response.is_read_request %}
                        disabled="disabled"
                         {% endif %}
                        placeholder="command" value="{{ request.form.command }}"
@@ -30,28 +37,44 @@
         <div class="row">
             <div class="large-4 medium-4 columns">
                 <label>Result</label>
-                <div>
-                    {% if command_response.response_text %}
-                        {{ command_response.response_text }}
-                    {% endif %}
+                <ul>
+                    {% for command in command_history %}
+                        <li>
+                            {% if command.input_command %}
+                                {{ command.input_command }}
+                            {% endif %}
+                            {% if command.response_text %}
+                                {{ command.response_text }}
+                            {% endif %}
 
-                    {% if command_response.scheduled_response_text %}
-                        {{ command_response.scheduled_response_text }}
-                    {% endif %}
-                    {% if command_response.is_transaction_request and not command_response.is_read_request%}
-                        <input name="isCreditAccount" type="hidden" placeholder="command"
-                               value="{{ command_response.is_credit_account }}"
-                               required/>
-                        <input name="referredUser" type="hidden" placeholder="command"
-                               value="{{ command_response.referred_user }}"
-                               required/>
-                        <input name="referredAmount" type="hidden" placeholder="command"
-                               value="{{ command_response.referred_amount }}"
-                               required/>
-                        <input type="file" name="file"/>
-                        <button type="submit" class="button"> GO!</button>
-                    {% endif %}
-                </div>
+                            {% if command.scheduled_response_text %}
+                                {{ command.scheduled_response_text }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                        <li>
+                            {% if command_response.response_text %}
+                                {{ command_response.response_text }}
+                            {% endif %}
+
+                            {% if command_response.scheduled_response_text %}
+                                {{ command_response.scheduled_response_text }}
+                            {% endif %}
+                            {% if command_response.is_transaction_request and not command_response.is_read_request %}
+                                <input name="isCreditAccount" type="hidden" placeholder="command"
+                                       value="{{ command_response.is_credit_account }}"
+                                       required/>
+                                <input name="referredUser" type="hidden" placeholder="command"
+                                       value="{{ command_response.referred_user }}"
+                                       required/>
+                                <input name="referredAmount" type="hidden" placeholder="command"
+                                       value="{{ command_response.referred_amount }}"
+                                       required/>
+                                <input type="file" name="file"/>
+                                <button type="submit" class="button"> GO!</button>
+                            {% endif %}
+                        </li>
+                </ul>
             </div>
         </div>
         <div class="row">

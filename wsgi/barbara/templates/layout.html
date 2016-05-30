@@ -23,44 +23,43 @@
 
 <div>
     <div class="top-bar">
-      <div class="top-bar-left">
-        <ul class="dropdown menu" data-dropdown-menu>
-            <li class="menu-text">DextrousInc</li>
-            <li><a href="/">Home</a></li>
-            <li><a href="/users">Users</a></li>
-            {% if session['user'] %}
-            <li><a href="/from-transactions">Received</a></li>
-            <li><a href="/to-transactions">Sent</a></li>
-            <li><a href="/credit-transactions">Credit Transactions</a></li>
-            {% endif %}
-            <li><a href="/investment-plans">Investment Plans</a></li>
-            <li><a href="/about-app"><i class="foundicon-location"></i>App</a></li>
-        </ul>
-      </div>
-      <div class="top-bar-right">
-        <ul class="dropdown menu" data-dropdown-menu>
-        {% if session['user'] %}
-            <li><a>Welcome {{ session['user'].fullName }}</a></li>
-        {% endif %}
-            <li>
-                <a href="#">Actions</a>
-                <ul class="menu vertical">
-                    {% if session['user'] %}
-                        <li><a href="/my-profile">Profile</a></li>
-                        <li><a href="/process-command">Chat Bot</a></li>
-                        <li><a href="/logout">Logout</a></li>
-                    {% else %}
-                        <li><a href="/login">Sign in</a></li>
-                        <li><a href="/register">Sign up</a></li>
-                    {% endif %}
-                </ul>
-            </li>
-        </ul>
-      </div>
+        <div class="top-bar-left">
+            <ul class="dropdown menu" data-dropdown-menu>
+                <li class="menu-text">DextrousInc</li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/users">Users</a></li>
+                {% if session['user'] %}
+                    <li><a href="/transactions">Transaction history</a></li>
+                    <li><a href="/credit-transactions">Credit Transactions</a></li>
+                {% endif %}
+                <li><a href="/investment-plans">Investment Plans</a></li>
+                <li><a href="/about-app"><i class="foundicon-location"></i>App</a></li>
+            </ul>
+        </div>
+        <div class="top-bar-right">
+            <ul class="dropdown menu" data-dropdown-menu>
+                {% if session['user'] %}
+                    <li><a>Welcome {{ session['user'].fullName }}</a></li>
+                {% endif %}
+                <li>
+                    <a href="#">Actions</a>
+                    <ul class="menu vertical">
+                        {% if session['user'] %}
+                            <li><a href="/my-profile">Profile</a></li>
+                            <li><a href="/process-command">Chat Bot</a></li>
+                            <li><a href="/logout">Logout</a></li>
+                        {% else %}
+                            <li><a href="/login">Sign in</a></li>
+                            <li><a href="/register">Sign up</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 <div class="row column">
-<hr>
+    <hr>
 </div>
 <div class="row main">
     <div class="large-12 columns">

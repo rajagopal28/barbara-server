@@ -18,20 +18,12 @@ VERIFICATION_RESULT_ACCEPT = 'Accept'
 VERIFICATION_CONFIDENCE = ['Low', 'Normal', 'High']
 
 
-@app.route("/from-transactions", methods=['GET'])
-def from_user_transactions():
-    if session['user']:
-        _user_id = session['user']['id']
-        _user_transactions = Transaction.query.filter_by(to_user_id=_user_id).order_by(
-                Transaction.created_ts.desc()).all()
-        return render_template('user-transactions.html', user_transactions=_user_transactions)
-
-
-@app.route("/to-transactions", methods=['GET'])
+@app.route("/transactions", methods=['GET'])
 def to_user_transactions():
     if session['user']:
         _user_id = session['user']['id']
-        _user_transactions = Transaction.query.filter_by(from_user_id=_user_id).order_by(
+        _user_transactions = Transaction.query.filter(
+                (Transaction.from_user_id == _user_id) | (Transaction.to_user_id == _user_id)).order_by(
                 Transaction.created_ts.desc()).all()
         return render_template('user-transactions.html', user_transactions=_user_transactions)
 
@@ -45,19 +37,11 @@ def credit_transactions():
         return render_template('user-credit-transactions.html', user_transactions=_user_transactions)
 
 
-@app.route("/api/transactions/from/all")
-def get_user_from_transactions():
-    _user_id = request.args['userId']
-    _user_transactions = Transaction.query.filter_by(to_user_id=_user_id).order_by(
-            Transaction.created_ts.desc()).all()
-    result = [transaction.to_dict() for transaction in _user_transactions]
-    return jsonify(items=result, success=True)
-
-
-@app.route("/api/transactions/to/all")
+@app.route("/api/transactions/all")
 def get_user_to_transactions():
     _user_id = request.args['userId']
-    _user_transactions = Transaction.query.filter_by(from_user_id=_user_id).order_by(
+    _user_transactions = Transaction.query.filter(
+            (Transaction.from_user_id == _user_id) | (Transaction.to_user_id == _user_id)).order_by(
             Transaction.created_ts.desc()).all()
     result = [transaction.to_dict() for transaction in _user_transactions]
     return jsonify(items=result, success=True)
@@ -77,6 +61,7 @@ def process_app_user_command():
     _user_id = request.form['userId']
     _input_command = request.form['command']
     _command_response = process_command(_input_command)
+    _command_response.user_id = _user_id
     _command_response = process_command_response(_command_response, _user_id)
     result = _command_response.to_dict()
     return jsonify(item=result, success=True)
@@ -84,17 +69,32 @@ def process_app_user_command():
 
 @app.route("/process-command", methods=['GET', 'POST'])
 def process_user_command():
-    _command_response = None
     if session['user']:
         _user_id = session['user']['id']
+        _command_history = []
+        _command_start_id = None
+        _command_response = None
         if request.method == 'POST':
             _input_command = request.form['command']
+            print _input_command
+            _command_start_id = request.form['startCommandId']
             _command_response = process_command(command_sentence=_input_command)
+            _command_response.user_id = _user_id
             print _command_response.to_dict()
             _command_response = process_command_response(command_response=_command_response, user_id=_user_id)
             db.session.add(_command_response)
             db.session.commit()
-        return render_template('chat-bot.html', command_response=_command_response)
+            if _command_start_id:
+                _command_history = CommandResponse.query \
+                    .filter_by(user_id=_user_id) \
+                    .filter(CommandResponse.id > int(_command_start_id)) \
+                    .order_by(CommandResponse.created_ts.asc()).all()
+            else:
+                _command_start_id=_command_response.id
+            print _input_command
+            _command_history.append(_command_response)
+        return render_template('chat-bot.html', command_history=_command_history,
+                               current_session_command_start=_command_start_id, command_response=_command_response)
 
 
 @app.route("/api/users/authenticate-transfer", methods=['POST'])
@@ -122,6 +122,7 @@ def voice_verification():
         user_verified = user_verified and (_index != -1)
         if user_verified and _command_sentence:
             command_response = process_command(_command_sentence)
+            command_response.user_id = _user_id
             if command_response.is_credit_account:
                 pay_credit_card_bill(_user_id)
                 command_response.response_text = 'Done paying your credit card outstanding'
@@ -161,7 +162,10 @@ def authenticate_user_command():
             user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
             user_verified = user_verified and (_index != -1)
             if user_verified:
-                command_response = CommandResponse()
+                _command_sentence = 'Authenticating transfer...isCreditAccount=%s ; referredUser=%s; referredAmount=%s' % (
+                    is_credit_account, referred_user, referred_amount)
+                command_response = CommandResponse(input_command=_command_sentence)
+                command_response.user_id = user_id
                 if is_credit_account == 'true':
                     pay_credit_card_bill(user_id)
                     command_response.response_text = 'Done paying your credit card outstanding'
@@ -179,6 +183,7 @@ def execute_verified_transfer():
         user_id = request.form['userId']
         _command_sentence = request.form['command']
         command_response = process_command(_command_sentence)
+        command_response.user_id = user_id
         if command_response.is_credit_account == 'true':
             pay_credit_card_bill(user_id)
             command_response.response_text = 'Done paying your credit card outstanding'
@@ -221,7 +226,7 @@ def process_command_response(command_response, user_id):
         _user = User.query.filter_by(id=user_id).first()
         command_response.response_text = 'Your credit card outstanding is ' + _user.currency_type + ' ' + str(
                 _user.credit)
-    elif command_response.is_read_request:
+    elif command_response.is_read_request or command_response.is_current_balance_request:
         if command_response.is_current_balance_request:
             _user = User.query.filter_by(id=user_id).first()
             command_response.response_text = 'Your account balance is ' + _user.currency_type + ' ' + str(_user.wallet)

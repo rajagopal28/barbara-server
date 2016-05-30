@@ -38,7 +38,7 @@ AMOUNT_REFERENCES = [{'hundred': 100}, {'thousand': 1000}, {'fifty': 50}, {'twen
 
 def process_command(command_sentence):
     command_sentence = command_sentence.lower()
-    command_response = CommandResponse()
+    command_response = CommandResponse(input_command=command_sentence)
     # check for greeting text
     command_sentence = remove_special_characters(command_sentence)
     command_response.has_greeting_text = is_greeting_present(command_sentence)

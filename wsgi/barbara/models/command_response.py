@@ -5,6 +5,8 @@ import datetime
 class CommandResponse(db.Model):
     __tablename__ = 'processed_commands'
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    input_command = db.Column(db.String(128))
     has_greeting_text = db.Column(db.Boolean, default=False)
     is_read_request = db.Column(db.Boolean, default=False)
     is_read_sent_transaction = db.Column(db.Boolean, default=False)  # true for send operations and false of receive
@@ -24,8 +26,8 @@ class CommandResponse(db.Model):
     created_ts = db.Column(db.DateTime, default=datetime.datetime.now())
     last_updated_ts = db.Column(db.DateTime, default=datetime.datetime.now())
 
-    def __init__(self):
-        pass
+    def __init__(self,input_command):
+        self.input_command = input_command
 
     def to_dict(self):
         return {
