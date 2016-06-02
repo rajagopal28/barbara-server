@@ -88,12 +88,12 @@ def get_message_for_response(command_response, command_sentence):
     elif command_response.is_budget_check and command_response.is_budget_change:
         message = extract_budget_from_sentence(command_sentence).strip()
     elif command_response.is_reminder_request and command_response.referred_user and command_response.referred_amount:
-        message = 'Reminding you to transfer' + command_response.referred_amount \
+        message = 'Reminder to transfer' + command_response.referred_amount \
                   + ' to ' + command_response.referred_user \
                   + ' on ' + str(command_response.time_associated)
     elif command_response.is_reminder_request and not (
                 command_response.referred_user and command_response.referred_amount):
-        message = 'Reminding you to ' + command_sentence \
+        message = 'Reminder to ' + command_sentence \
                   + ' on ' + str(command_response.time_associated)
     elif command_response.is_schedule_request:
         if command_response.referred_amount and command_response.referred_user != ACCOUNT_SELF:

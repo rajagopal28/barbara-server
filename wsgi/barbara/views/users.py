@@ -8,10 +8,12 @@ from barbara.models.users import User
 from barbara.models.user_preferences import UserPreference
 from barbara.models.invetment_plans import InvestmentPlan
 
-
 from oxford.speaker_recognition.Verification.CreateProfile import create_profile
 from oxford.speaker_recognition.Verification.EnrollProfile import enroll_profile
 from oxford.speaker_recognition.Verification.VerifyFile import verify_file
+
+VERIFICATION_RESULT_ACCEPT = 'Accept'
+VERIFICATION_CONFIDENCE = ['Low', 'Normal', 'High']
 
 
 @app.route("/users")
@@ -66,7 +68,7 @@ def voice_register():
 
 
 @app.route("/verify-voice", methods=['POST', 'GET'])
-def voice_enrollment():
+def user_voice_verify():
     # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
     if request.method == 'POST':
         # receive voice file from request
@@ -88,6 +90,34 @@ def voice_enrollment():
         return redirect(url_for('home'))
     else:
         return render_template('post-voice.html')
+
+
+@app.route("/api/users/verify-voice", methods=['POST'])
+def user_voice_verification():
+    # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
+    # receive voice file from request
+    _user_id = request.form['userId']
+    _file = request.files['file']
+    user = User.query.filter_by(id=_user_id).first()
+    _success = False
+    _response_item = None
+    if _file and user:
+        filename = secure_filename(_file.filename)
+        # print app.config['UPLOAD_FOLDER']
+        _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
+        _file.save(_created_file_path)
+        print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+        print user.speaker_profile_id
+        print _created_file_path
+        verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                            user.speaker_profile_id)
+        _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
+        _success = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
+        _success = _success and (_index != -1)
+        remove(_created_file_path)
+        _response_item = user.to_dict()
+    # register with the current user's speaker profile
+    return jsonify(success=_success, item=_response_item)
 
 
 @app.route("/my-profile")

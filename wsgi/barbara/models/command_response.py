@@ -42,7 +42,7 @@ class CommandResponse(db.Model):
             'isBudgetCheck': self.is_budget_check,
             'isBudgetChange': self.is_budget_change,
             'isPromotionsCheck': self.is_promotions_check,
-            'requireAuthentication': self.is_schedule_request or self.is_transaction_request,
+            'requireAuthentication': (self.is_schedule_request or self.is_transaction_request) and not self.is_reminder_request,
             'referredUser': self.referred_user,
             'referredAmount': self.referred_amount,
             'responseText': self.response_text,

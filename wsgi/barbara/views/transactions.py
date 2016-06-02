@@ -90,14 +90,14 @@ def process_user_command():
                     .filter(CommandResponse.id > int(_command_start_id)) \
                     .order_by(CommandResponse.created_ts.asc()).all()
             else:
-                _command_start_id=_command_response.id
+                _command_start_id = _command_response.id
             print _input_command
             _command_history.append(_command_response)
         return render_template('chat-bot.html', command_history=_command_history,
                                current_session_command_start=_command_start_id, command_response=_command_response)
 
 
-@app.route("/api/users/authenticate-transfer", methods=['POST'])
+@app.route("/api/transactions/authenticate-transfer", methods=['POST'])
 def voice_verification():
     # receive voice file from request
     _user_id = request.form['userId']
@@ -130,6 +130,10 @@ def voice_verification():
                 transfer_amount_to_user(_user_id, command_response.referred_user, command_response.referred_amount)
                 command_response.response_text = 'Done transferring ' + command_response.referred_amount + ' to ' \
                                                  + command_response.referred_user
+            # reset the authentication flags to avoid looping back
+            command_response.is_transaction_request = False
+            command_response.is_schedule_request = False
+            command_response.is_reminder_request = False
             result = command_response.to_dict()
             # add the command to database
             db.session.add(command_response)
@@ -178,28 +182,30 @@ def authenticate_user_command():
 
 @app.route("/api/transactions/execute-verified-transfer", methods=['POST'])
 def execute_verified_transfer():
-    _command_response = None
     if request.form['userId']:
         user_id = request.form['userId']
         _command_sentence = request.form['command']
         command_response = process_command(_command_sentence)
         command_response.user_id = user_id
-        if command_response.is_credit_account == 'true':
+        if command_response.is_credit_account:
             pay_credit_card_bill(user_id)
             command_response.response_text = 'Done paying your credit card outstanding'
-            _status = True
         else:
             transfer_amount_to_user(user_id, command_response.referred_user, command_response.referred_amount)
             command_response.response_text = 'Done transferring %s to %s now' % (command_response.referred_amount,
                                                                                  command_response.referred_user)
-            _status = True
-        return jsonify(success=_status, command_response=_command_response)
+        _status = True
+        # reset the authentication flags to avoid looping back
+        command_response.is_transaction_request = False
+        command_response.is_schedule_request = False
+        command_response.is_reminder_request = False
+        return jsonify(success=_status, item=command_response.to_dict())
 
 
 def process_command_response(command_response, user_id):
     if command_response.is_reminder_request:
-        # do nothing
-        pass
+        command_response.scheduled_response_text = command_response.response_text
+        command_response.response_text += ' added'
     elif command_response.is_promotions_check:
         print command_response.response_text
         if len(command_response.response_text) > 0:
@@ -209,7 +215,7 @@ def process_command_response(command_response, user_id):
             # get promotions from email
             command_response.response_text = 'Here are some matching promotions on %s' % promotions_key
             command_response.scheduled_response_text = ' %s' % promotions_list
-    elif command_response.is_schedule_request:
+    elif command_response.is_schedule_request or command_response.is_transaction_request:
         if command_response.is_transaction_request:
             # send a response so that the user inputs password
             _user_preference = UserPreference.query.filter_by(user_id=user_id).first()
@@ -298,7 +304,11 @@ def process_command_response(command_response, user_id):
                                                            + str(difference) \
                                                            + ' more. Be cautious dude.'
         else:
-            command_response.response_text = 'Hey, You\'ve not set any budget. What budget should I set?'
+            command_response.response_text = 'You\'ve not set any budget. What budget should I set?'
+    if command_response.has_greeting_text:
+        _user_preference = UserPreference.query.filter_by(user_id=user_id).first()
+        command_response.response_text = 'Hey ' + _user_preference.nick_name + '.' \
+                                         + command_response.response_text
     return command_response
 
 
