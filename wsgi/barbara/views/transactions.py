@@ -114,12 +114,15 @@ def voice_verification():
         # print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
         # print user.speaker_profile_id
         # print _created_file_path
-        verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
-                                            user.speaker_profile_id)
+        try:
+            verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                                user.speaker_profile_id)
+            _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
+            user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
+            user_verified = user_verified and (_index != -1)
+        except Exception:
+            user_verified = False
         remove(_created_file_path)
-        _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
-        user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
-        user_verified = user_verified and (_index != -1)
         if user_verified and _command_sentence:
             command_response = process_command(_command_sentence)
             command_response.user_id = _user_id
@@ -159,12 +162,15 @@ def authenticate_user_command():
             # print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
             # print user.speaker_profile_id
             # print _created_file_path
-            verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
-                                                user.speaker_profile_id)
+            try:
+                verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                                    user.speaker_profile_id)
+                _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
+                user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
+                user_verified = user_verified and (_index != -1)
+            except Exception:
+                user_verified = False
             remove(_created_file_path)
-            _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
-            user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
-            user_verified = user_verified and (_index != -1)
             if user_verified:
                 _command_sentence = 'Authenticating transfer...isCreditAccount=%s ; referredUser=%s; referredAmount=%s' % (
                     is_credit_account, referred_user, referred_amount)
@@ -306,8 +312,13 @@ def process_command_response(command_response, user_id):
         else:
             command_response.response_text = 'You\'ve not set any budget. What budget should I set?'
     if command_response.has_greeting_text:
-        _user_preference = UserPreference.query.filter_by(user_id=user_id).first()
-        command_response.response_text = 'Hey ' + _user_preference.nick_name + '.' \
+        _user = User.query.filter_by(id=user_id).first()
+        _user_preference = _user.preferences
+        if _user_preference and _user_preference.nick_name:
+            _nick_name = _user_preference.nick_name
+        else:
+            _nick_name = _user.full_name()
+        command_response.response_text = 'Hey ' + _nick_name + '.' \
                                          + command_response.response_text
     return command_response
 

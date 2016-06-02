@@ -109,11 +109,14 @@ def user_voice_verification():
         print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
         print user.speaker_profile_id
         print _created_file_path
-        verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
-                                            user.speaker_profile_id)
-        _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
-        _success = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
-        _success = _success and (_index != -1)
+        try:
+            verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                                user.speaker_profile_id)
+            _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
+            _success = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
+            _success = _success and (_index != -1)
+        except Exception:
+            _success = False
         remove(_created_file_path)
         _response_item = user.to_dict()
     # register with the current user's speaker profile

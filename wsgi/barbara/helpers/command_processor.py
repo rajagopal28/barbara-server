@@ -87,12 +87,14 @@ def get_message_for_response(command_response, command_sentence):
         message = extract_promotions_from_sentence(command_sentence).strip()
     elif command_response.is_budget_check and command_response.is_budget_change:
         message = extract_budget_from_sentence(command_sentence).strip()
-    elif command_response.is_reminder_request and command_response.referred_user and command_response.referred_amount:
-        message = 'Reminder to transfer' + command_response.referred_amount \
-                  + ' to ' + command_response.referred_user \
-                  + ' on ' + str(command_response.time_associated)
-    elif command_response.is_reminder_request and not (
-                command_response.referred_user and command_response.referred_amount):
+    elif command_response.is_schedule_request:
+        if command_response.referred_user and command_response.referred_amount:
+            message = 'Reminder to transfer' + command_response.referred_amount \
+                      + ' to ' + command_response.referred_user \
+                      + ' on ' + str(command_response.time_associated)
+        else:
+            message = 'Oops!! Mis-interpretation.. Try again!!'
+    elif command_response.is_reminder_request:
         message = 'Reminder to ' + command_sentence \
                   + ' on ' + str(command_response.time_associated)
     elif command_response.is_schedule_request:
@@ -101,7 +103,7 @@ def get_message_for_response(command_response, command_sentence):
                       + ' to ' + command_response.referred_user \
                       + ' on ' + str(command_response.time_associated)
         else:
-            'Oops!! Mis-interpretation.. Try again!!'
+            message = 'Oops!! Mis-interpretation.. Try again!!'
     elif command_response.is_read_request:
         if command_response.is_credit_account and command_response.is_current_balance_request:
             message = 'Reading your credit card outstanding'
@@ -290,7 +292,11 @@ def is_reminder_request(sentence):
 
 
 def check_sentence_has_words_in_list(sentence, words_list):
-    return any(word in sentence for word in words_list)
+    return any(with_word_boundary(word) in with_word_boundary(sentence) for word in words_list)
+
+
+def with_word_boundary(word):
+    return ' %s ' % word
 
 
 def remove_words_from_sentence(sentence, words_to_remove):
