@@ -27,7 +27,12 @@
     text-indent: -9999px;
     width: 24px;
 }
-
+.app-screen {
+    padding: 50px 75px;
+}
+.app-screen .thumbnail{
+    width: 500px;
+}
 .social_media li a {
     display: block;
     height: 24px;
