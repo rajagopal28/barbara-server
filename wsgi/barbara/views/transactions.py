@@ -1,4 +1,4 @@
-from flask import render_template, session, request, jsonify
+from flask import render_template, session, request, jsonify, redirect, url_for
 import datetime
 from werkzeug import secure_filename
 from os import remove, path
@@ -9,7 +9,8 @@ from barbara.models.user_preferences import UserPreference
 from barbara.models.transactions import Transaction
 from barbara.models.command_response import CommandResponse
 from barbara.models.credit_transactions import CreditTransaction
-from barbara.helpers.command_processor import process_command, find_substring
+from barbara.models.investment_plans import InvestmentPlan
+from barbara.helpers.command_processor import process_command, get_mis_replies
 from barbara.helpers.mail_processor import read_email
 
 from oxford.speaker_recognition.Verification.VerifyFile import verify_file
@@ -35,6 +36,22 @@ def credit_transactions():
         _user_transactions = CreditTransaction.query.filter_by(user_id=_user_id).order_by(
                 CreditTransaction.created_ts.desc()).all()
         return render_template('user-credit-transactions.html', user_transactions=_user_transactions)
+
+
+@app.route("/credit-transactions/shop", methods=['GET', 'POST'])
+def shop_credit_transactions():
+    if request.method == 'POST':
+        if session['user']:
+            _user_id = session['user']['id']
+            _description = request.form['description']
+            _amount = request.form['amount']
+            new_credit_transaction = CreditTransaction(user_id=_user_id, description=_description, amount=_amount)
+            user = User.query.filter_by(id=_user_id).first()
+            user.credit += float(_amount)
+            db.session.add(new_credit_transaction)
+            db.session.commit()
+        return redirect(url_for('credit_transactions'))
+    return render_template('shop-credit-transaction.html')
 
 
 @app.route("/api/transactions/all")
@@ -302,9 +319,12 @@ def process_command_response(command_response, user_id):
             if budget >= total_this_month_spend:
                 command_response.response_text = 'We are Cool on this month budget. Have fun.'
                 # get investment plans here for the difference amount
-                command_response.scheduled_response_text = 'Here are the list of investments you might like.'
+                _investments = InvestmentPlan.query.filter(
+                    InvestmentPlan.amount <= (budget - total_this_month_spend)).all()
+                command_response.scheduled_response_text = 'Here are the list of investments you might like.\n'
+                command_response.scheduled_response_text += '\n'.join([item.description for item in _investments])
             else:
-                command_response.response_text = 'Oops! We have spent more than we should.'
+                command_response.response_text = get_mis_replies()
                 difference = total_this_month_spend - budget
                 command_response.scheduled_response_text = 'We spent ' \
                                                            + str(difference) \
@@ -327,7 +347,8 @@ def total_spend_transactions(user_id):
     month_start = datetime.datetime.now()
     month_start = month_start - datetime.timedelta(days=month_start.day)
     _transactions = Transaction.query.filter_by(from_user_id=user_id).filter(Transaction.created_ts >= month_start)
-    total_spend = 0
+    _user = User.query.filter_by(id=user_id).first()
+    total_spend = _user.credit
     for transaction in _transactions:
         total_spend += transaction.amount
     return total_spend

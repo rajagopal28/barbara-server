@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block body %}
+    <form action="" method=post class="form-horizontal">
+        <h2>Add new Investment Plan</h2>
+        {% if error %}
+            <div class="large-12 columns">
+                <div class="alert callout">
+                    <p><strong>Error:</strong> {{ error }}</p>
+                </div>
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="large-4 medium-4 columns">
+                <label>Plan Description</label>
+                <input type="text" name="description" class="input-xlarge"
+                       placeholder="Life Insurance cover at 1000 per month" value="{{ request.form.description }}"
+                       required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="large-4 medium-4 columns">
+                <label>Plan type</label>
+                <select name="type">
+                    <option value="Insurance" seleceted="selected">Insurance</option>
+                    <option value="MutualFunds">Mutual Funds</option>
+                    <option value="HomeLoans">Home Loans</option>
+                    <option value="PersonalLoans">Personal Loans</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="large-4 medium-4 columns">
+                <label>Plan Amount</label>
+                <input type="text" name="amount" class="input-xlarge"
+                       placeholder="1000" value="{{ request.form.amount }}"
+                       required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="large-4 medium-4 columns">
+                <button type="submit" class="button">Add</button>
+                <a href="{{ url_for('home') }}">Back to home</a>
+            </div>
+        </div>
+    </form>
+{% endblock %}

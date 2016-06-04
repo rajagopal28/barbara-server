@@ -6,7 +6,7 @@ from barbara import app, db
 
 from barbara.models.users import User
 from barbara.models.user_preferences import UserPreference
-from barbara.models.invetment_plans import InvestmentPlan
+from barbara.models.investment_plans import InvestmentPlan
 
 from oxford.speaker_recognition.Verification.CreateProfile import create_profile
 from oxford.speaker_recognition.Verification.EnrollProfile import enroll_profile
@@ -204,3 +204,23 @@ def login():
 def investment_plans():
     _plans = InvestmentPlan.query.all()
     return render_template('investment-plans.html', plans=_plans)
+
+
+@app.route("/investment-plans/add", methods=['GET','POST'])
+def add_investment_plan():
+    if request.method == 'POST':
+        _description = request.form['description']
+        _amount = request.form['amount']
+        _type = request.form['type']
+        new_plan = InvestmentPlan(description=_description, amount=_amount, type=_type)
+        db.session.add(new_plan)
+        db.session.commit()
+        return redirect(url_for('investment_plans'))
+    return render_template('new-investment-plan.html')
+
+
+@app.route("/api/investment/plans", methods=['GET'])
+def get_investment_plans():
+    _plans = InvestmentPlan.query.all()
+    _plans = [plan.to_dict() for plan in _plans]
+    return jsonify(success=True, items=_plans)

@@ -1,5 +1,6 @@
 import string
 import datetime
+import random
 
 from barbara import app
 from barbara.models.command_response import CommandResponse
@@ -34,6 +35,9 @@ PROMOTION_REPLACEMENT = 'promotion_content'
 ACCOUNT_SELF = 'self'
 AMOUNT_REFERENCE_NONE = 'money'
 AMOUNT_REFERENCES = [{'hundred': 100}, {'thousand': 1000}, {'fifty': 50}, {'twenty': 20}, {'ten': 10}]
+SARCASTIC_MIS_REPLIES = ['Oops! Seems like you missed a vowel there. ha ha ha. Try again.',
+                         'I don\'t think a banking assistant can know that. Try again.',
+                         'I\'m not that miraculous to do that. Try again']
 
 
 def process_command(command_sentence):
@@ -93,7 +97,7 @@ def get_message_for_response(command_response, command_sentence):
                       + ' to ' + command_response.referred_user \
                       + ' on ' + str(command_response.time_associated)
         else:
-            message = 'Oops!! Mis-interpretation.. Try again!!'
+            message = get_mis_replies()
     elif command_response.is_reminder_request:
         message = 'Reminder to ' + command_sentence \
                   + ' on ' + str(command_response.time_associated)
@@ -103,7 +107,7 @@ def get_message_for_response(command_response, command_sentence):
                       + ' to ' + command_response.referred_user \
                       + ' on ' + str(command_response.time_associated)
         else:
-            message = 'Oops!! Mis-interpretation.. Try again!!'
+            message = get_mis_replies()
     elif command_response.is_read_request:
         if command_response.is_credit_account and command_response.is_current_balance_request:
             message = 'Reading your credit card outstanding'
@@ -123,7 +127,7 @@ def get_message_for_response(command_response, command_sentence):
             message = 'Transferring ' + command_response.referred_amount + ' to ' \
                       + command_response.referred_user + ' now'
     else:
-        message = 'Oops!! Mis-interpretation.. Try again!!'
+        message = get_mis_replies()
     return message
 
 
@@ -335,6 +339,11 @@ def get_number_to_text_amount(amount_text):
         if item.get(amount_text):
             return item[amount_text]
     return None
+
+
+def get_mis_replies():
+    index = int(100 * random.random()) % len(SARCASTIC_MIS_REPLIES)
+    return SARCASTIC_MIS_REPLIES[index]
 
 
 def text_to_int(text_num, num_words={}):

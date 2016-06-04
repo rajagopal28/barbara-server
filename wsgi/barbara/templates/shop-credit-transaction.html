@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
-    <form action="" method="post" enctype="multipart/form-data" class="form-horizontal">
-        <h2>Process Voice</h2>
+    <form action="" method=post class="form-horizontal">
+        <h2>Shop on Credit</h2>
         {% if error %}
             <div class="large-12 columns">
                 <div class="alert callout">
@@ -11,22 +11,23 @@
         {% endif %}
         <div class="row">
             <div class="large-4 medium-4 columns">
-                <label>userId</label>
-                <input type="text" name="userId" class="input-xlarge"
-                       placeholder="userId" value="{{ request.form.userId }}"
+                <label>Plan Description</label>
+                <input type="text" name="description" class="input-xlarge"
+                       placeholder="Shopping at Mart Mall" value="{{ request.form.description }}"
                        required>
             </div>
         </div>
         <div class="row">
             <div class="large-4 medium-4 columns">
-                <label>Password</label>
-                <input type="file" name="file" class="input-xlarge"
+                <label>Plan Amount</label>
+                <input type="text" name="amount" class="input-xlarge"
+                       placeholder="1000" value="{{ request.form.amount }}"
                        required>
             </div>
         </div>
         <div class="row">
             <div class="large-4 medium-4 columns">
-                <button type="submit" class="button">Signin</button>
+                <button type="submit" class="button">Shop</button>
                 <a href="{{ url_for('home') }}">Back to home</a>
             </div>
         </div>
