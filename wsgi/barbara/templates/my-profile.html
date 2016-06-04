@@ -1,52 +1,76 @@
 {% extends "layout.html" %}
 {% block body %}
-     <h2>User Profile</h2>
-    {% if user %}
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>Full Name</h4>
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">User Profile</h3></div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12`">
+                    {% if user %}
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">First name</label>
+                                <div class="col-xs-10">
+                                    {{ user.first_name }}
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Last name</label>
+                                <div class="col-xs-10">
+                                    {{ user.last_name }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Joined:</label>
+                                <div class="col-xs-10">
+                                    {{ user.created_ts }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Username</label>
+                                <div class="col-xs-10">
+                                    {{ user.username }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Wallet</label>
+                                <div class="col-xs-10">
+                                    {{ user.wallet }} {{ user.currency_type }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Credit</label>
+                                <div class="col-xs-10">
+                                    {{ user.credit }} {{ user.currency_type }}
+                                </div>
+                            </div>
+                            <hr/>
+                            <h3> Preferences</h3>
+
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Nick Name</label>
+                                <div class="col-xs-10">
+                                    {{ user.preferences.nick_name }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Budget</label>
+                                <div class="col-xs-10">
+                                    {{ user.preferences.budget }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Security question</label>
+                                <div class="col-xs-10">
+                                    {{ user.preferences.security_question }}
+                                </div>
+                            </div>
+                        </div>
+
+
+                    {% endif %}
+                </div>
             </div>
-            <div class="medium-6 large-8 columns">
-                {{ user.first_name }} {{ user.last_name }}
-            </div>
         </div>
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>Joined: </h4>
-            </div>
-            <div class="medium-6 large-8 columns">{{ user.created_ts }}</div>
-        </div>
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>username: </h4></div>
-            <div class="medium-6 large-8 columns">{{ user.username }}</div>
-        </div>
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>Wallet: </h4></div>
-            <div class="medium-6 large-8 columns">{{ user.wallet }} {{ user.currency_type }}</div>
-        </div>
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>Credit: </h4></div>
-            <div class="medium-6 large-8 columns">{{ user.credit }} {{ user.currency_type }}</div>
-        </div>
-        <hr/>
-        <h3> Preferences</h3>
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>Nick name: </h4></div>
-            <div class="medium-6 large-8 columns">{{user.preferences.nick_name}}</div>
-        </div>
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>Budget: </h4></div>
-            <div class="medium-6 large-8 columns">{{user.preferences.budget}}</div>
-        </div>
-        <div class="row">
-            <div class="small-4 columns">
-                <h4>Security Question: </h4></div>
-            <div class="medium-6 large-8 columns">{{user.preferences.security_question}}</div>
-        </div>
-    {% endif %}
 {% endblock %}

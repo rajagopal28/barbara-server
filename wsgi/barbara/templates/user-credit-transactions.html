@@ -1,28 +1,39 @@
 {% extends "layout.html" %}
 {% block body %}
-    {% if user_transactions %}
-        <h2>Your Credit History</h2>
-        <table>
-            <thead>
-            <tr>
-                <th width="25%">From</th>
-                <th width="25%">Desc</th>
-                <th width="25%">Amount</th>
-                <th width="25%">Transferred On</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for transaction in user_transactions %}
-                <tr>
-                    <td>{{ transaction.user.full_name() }}</td>
-                    <td>{{ transaction.description }}</td>
-                    <td>{{ transaction.amount }}</td>
-                    <td>{{ transaction.created_ts }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <h2>No Transaction to display</h2>
-    {% endif %}
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">Your Credit History</h3></div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    {% if user_transactions %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th width="25%">From</th>
+                                <th width="25%">Desc</th>
+                                <th width="25%">Amount</th>
+                                <th width="25%">Transferred On</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for transaction in user_transactions %}
+                                <tr>
+                                    <td>{{ transaction.user.full_name() }}</td>
+                                    <td>{{ transaction.description }}</td>
+                                    <td>{{ transaction.amount }}</td>
+                                    <td>{{ transaction.created_ts }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <h2>No Transaction to display</h2>
+                    {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}

@@ -49,20 +49,22 @@ def voice_register():
     # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
     if request.method == 'POST':
         # receive voice file from request
-        _user_id = request.form['userId']
-        user = User.query.filter_by(id=_user_id).first()
-        _file = request.files['file']
-        if _file and user:
-            filename = secure_filename(_file.filename)
-            # print app.config['UPLOAD_FOLDER']
-            _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
-            _file.save(_created_file_path)
-            print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
-            print user.speaker_profile_id
-            print _created_file_path
-            enroll_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], user.speaker_profile_id, _created_file_path)
-        # register with the current user's speaker profile
-        return redirect(url_for('home'))
+        if session.get('userId', None):
+            _user_id = session['userId']
+            user = User.query.filter_by(id=_user_id).first()
+            _file = request.files['file']
+            if _file and user:
+                filename = secure_filename(_file.filename)
+                # print app.config['UPLOAD_FOLDER']
+                _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
+                _file.save(_created_file_path)
+                print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+                print user.speaker_profile_id
+                print _created_file_path
+                enroll_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], user.speaker_profile_id,
+                               _created_file_path)
+            # register with the current user's speaker profile
+            return redirect(url_for('home'))
     else:
         return render_template('post-voice.html')
 
@@ -72,22 +74,23 @@ def user_voice_verify():
     # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
     if request.method == 'POST':
         # receive voice file from request
-        _user_id = request.form['userId']
-        user = User.query.filter_by(id=_user_id).first()
-        _file = request.files['file']
-        if _file and user:
-            filename = secure_filename(_file.filename)
-            # print app.config['UPLOAD_FOLDER']
-            _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
-            _file.save(_created_file_path)
-            print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
-            print user.speaker_profile_id
-            print _created_file_path
-            verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
-                                                user.speaker_profile_id)
-            remove(_created_file_path)
-        # register with the current user's speaker profile
-        return redirect(url_for('home'))
+        if session.get('userId', None):
+            _user_id = session['userId']
+            user = User.query.filter_by(id=_user_id).first()
+            _file = request.files['file']
+            if _file and user:
+                filename = secure_filename(_file.filename)
+                # print app.config['UPLOAD_FOLDER']
+                _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
+                _file.save(_created_file_path)
+                print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+                print user.speaker_profile_id
+                print _created_file_path
+                verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
+                                                    user.speaker_profile_id)
+                remove(_created_file_path)
+            # register with the current user's speaker profile
+            return redirect(url_for('home'))
     else:
         return render_template('post-voice.html')
 
@@ -206,7 +209,7 @@ def investment_plans():
     return render_template('investment-plans.html', plans=_plans)
 
 
-@app.route("/investment-plans/add", methods=['GET','POST'])
+@app.route("/investment-plans/add", methods=['GET', 'POST'])
 def add_investment_plan():
     if request.method == 'POST':
         _description = request.form['description']

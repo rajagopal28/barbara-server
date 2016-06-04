@@ -26,7 +26,7 @@ class CommandResponse(db.Model):
     created_ts = db.Column(db.DateTime, default=datetime.datetime.now())
     last_updated_ts = db.Column(db.DateTime, default=datetime.datetime.now())
 
-    def __init__(self,input_command):
+    def __init__(self, input_command):
         self.input_command = input_command
 
     def to_dict(self):
@@ -42,7 +42,9 @@ class CommandResponse(db.Model):
             'isBudgetCheck': self.is_budget_check,
             'isBudgetChange': self.is_budget_change,
             'isPromotionsCheck': self.is_promotions_check,
-            'requireAuthentication': (self.is_schedule_request or self.is_transaction_request) and not self.is_reminder_request,
+            'requireAuthentication': (
+                                         self.is_schedule_request or (
+                                             self.is_transaction_request and not self.is_read_request)) and not self.is_reminder_request,
             'referredUser': self.referred_user,
             'referredAmount': self.referred_amount,
             'responseText': self.response_text,

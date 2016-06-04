@@ -93,7 +93,6 @@ def process_user_command():
         _command_response = None
         if request.method == 'POST':
             _input_command = request.form['command']
-            print _input_command
             _command_start_id = request.form['startCommandId']
             _command_response = process_command(command_sentence=_input_command)
             _command_response.user_id = _user_id
@@ -238,7 +237,8 @@ def process_command_response(command_response, user_id):
             # get promotions from email
             command_response.response_text = 'Here are some matching promotions on %s' % promotions_key
             command_response.scheduled_response_text = ' %s' % promotions_list
-    elif command_response.is_schedule_request or command_response.is_transaction_request:
+    elif command_response.is_schedule_request or (
+                command_response.is_transaction_request and not command_response.is_read_sent_transaction):
         if command_response.is_transaction_request:
             # send a response so that the user inputs password
             _user_preference = UserPreference.query.filter_by(user_id=user_id).first()
@@ -320,7 +320,7 @@ def process_command_response(command_response, user_id):
                 command_response.response_text = 'We are Cool on this month budget. Have fun.'
                 # get investment plans here for the difference amount
                 _investments = InvestmentPlan.query.filter(
-                    InvestmentPlan.amount <= (budget - total_this_month_spend)).all()
+                        InvestmentPlan.amount <= (budget - total_this_month_spend)).all()
                 command_response.scheduled_response_text = 'Here are the list of investments you might like.\n'
                 command_response.scheduled_response_text += '\n'.join([item.description for item in _investments])
             else:

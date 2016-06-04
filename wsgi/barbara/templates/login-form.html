@@ -1,35 +1,43 @@
 {% extends "layout.html" %}
 {% block body %}
-    <form action="" method=post class="form-horizontal">
-        <h2>Login</h2>
-        {% if error %}
-            <div class="large-12 columns">
-                <div class="alert callout">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">Sign in</h3>
+        </div>
+        <div class="panel-body">
+            {% if error %}
+
+                <div class="alert alert-danger" role="alert">
                     <p><strong>Error:</strong> {{ error }}</p>
                 </div>
-            </div>
-        {% endif %}
-        <div class="row">
-            <div class="large-4 medium-4 columns">
-                <label>Username</label>
-                <input type="text" name="username" class="input-xlarge"
-                       placeholder="username" value="{{ request.form.username }}"
-                       required>
-            </div>
+            {% endif %}
+            <form class="form-horizontal" action="" method="post">
+                <div class="form-group">
+                    <label class="control-label"><sup>*</sup>Indicates required fields</label>
+                </div>
+                <div class="form-group">
+                    <label for="inputPassword" class="control-label col-xs-2">Username<sup>*</sup></label>
+                    <div class="col-xs-5">
+                        <input type="text" name="username" class=""
+                               placeholder="username" value="{{ request.form.username }}"
+                               required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="inputPassword" class="control-label col-xs-2">Password<sup>*</sup></label>
+                    <div class="col-xs-5">
+                        <input type="password" name="password" class=""
+                               placeholder="password" value="{{ request.form.password }}"
+                               required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-xs-offset-2 col-xs-5">
+                        <button type="submit" class="btn btn-primary">Sign in</button>
+                        <a class="btn btn-default" href="{{ url_for('home') }}">Back to home</a>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="row">
-            <div class="large-4 medium-4 columns">
-                <label>Password</label>
-                <input type="password" name="password" class="input-xlarge"
-                       placeholder="passeord" value="{{ request.form.password }}"
-                       required>
-            </div>
-        </div>
-        <div class="row">
-            <div class="large-4 medium-4 columns">
-                <button type="submit" class="button">Signin</button>
-                <a href="{{ url_for('home') }}">Back to home</a>
-            </div>
-        </div>
-    </form>
+    </div>
 {% endblock %}

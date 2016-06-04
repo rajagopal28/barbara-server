@@ -1,92 +1,88 @@
 {% extends "layout.html" %}
 {% block body %}
-    <form
-            {% if command_response.is_transaction_request and not command_response.is_read_request %}
-                action="/authenticate-transfer"
-            {% else %}
-                action=""
-            {% endif %}
-
-                method="post" enctype="multipart/form-data" class="form-horizontal">
-        <h2>Login</h2>
-        {% if error %}
-            <div class="large-12 columns">
-                <div class="alert callout">
-                    <p><strong>Error:</strong> {{ error }}</p>
-                </div>
-            </div>
-        {% endif %}
-            <input type="hidden" name="startCommandId"
-                {% if current_session_command_start %}
-                   value="{{ current_session_command_start }}"
-                {% else %}
-                   value=""
-                {% endif %}
-            />
-        <div class="row">
-            <div class="large-4 medium-4 columns">
-                <label>Command</label>
-                <input type="text" name="command" class="input-xlarge"
-                        {% if command_response.is_transaction_request and not command_response.is_read_request %}
-                       disabled="disabled"
-                        {% endif %}
-                       placeholder="command" value="{{ request.form.command }}"
-                       required>
-            </div>
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">Chat page</h3>
         </div>
-        <div class="row">
-            <div class="large-4 medium-4 columns">
-                <label>Result</label>
-                <ul>
+        <div>
+            <div class="panel-body">
+                <form
+                        {% if command_response.is_transaction_request and not command_response.is_read_request %}
+                            action="/authenticate-transfer"
+                        {% else %}
+                            action=""
+                        {% endif %}
+                            method="post" enctype="multipart/form-data" class="form-horizontal">
+                    <input type="hidden" name="startCommandId"
+                            {% if current_session_command_start %}
+                           value="{{ current_session_command_start }}"
+                            {% else %}
+                           value=""
+                            {% endif %}
+                    />
                     {% for command in command_history %}
-                        <li>
-                            {% if command.input_command %}
-                                {{ command.input_command }}
-                            {% endif %}
-                            {% if command.response_text %}
-                                {{ command.response_text }}
-                            {% endif %}
+                        {% if command.input_command %}
+                            <div class="container">
+                                <div class="meta">
+                                    <img src=""
+                                         class="avatar" class="chat-owner">
+                                </div><!-- div meta -->
+                                <div class="chat-content-mine chat-content">
+                                    <p> {{ command.input_command }}</p>
+                                </div><!-- div content-->
+                            </div><!-- div container -->
 
-                            {% if command.scheduled_response_text %}
-                                {{ command.scheduled_response_text }}
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                        <li>
-                            {% if command_response.response_text %}
-                                {{ command_response.response_text }}
-                            {% endif %}
-
-                            {% if command_response.scheduled_response_text %}
-                                {{ command_response.scheduled_response_text }}
-                            {% endif %}
-                            {% if command_response.is_transaction_request and not command_response.is_read_request %}
-                                <input name="isCreditAccount" type="hidden" placeholder="command"
-                                       value="{{ command_response.is_credit_account }}"
-                                       required/>
-                                <input name="referredUser" type="hidden" placeholder="command"
-                                       value="{{ command_response.referred_user }}"
-                                       required/>
-                                <input name="referredAmount" type="hidden" placeholder="command"
-                                       value="{{ command_response.referred_amount }}"
-                                       required/>
-                                <input type="file" name="file"/>
-                                <button type="submit" class="button"> GO!</button>
-                            {% endif %}
-                        </li>
-                </ul>
-            </div>
-        </div>
-        <div class="row">
-            <div class="large-4 medium-4 columns">
-                <button type="submit" class="button"
-                        {% if command_response.is_transaction_request and not command_response.is_read_request %}
-                        disabled="disabled"
                         {% endif %}
-                >Signin
-                </button>
-                <a href="{{ url_for('home') }}">Back to home</a>
-            </div>
-        </div>
-    </form>
+
+                        {% if command.response_text %}
+                            <div class="container">
+                                <div class="meta">
+                                    <img src=""
+                                         class="avatar">
+                                </div><!-- div meta -->
+                                <div class="chat-content">
+                                    <p>{{ command.response_text }}</p>
+                                    {% if command.scheduled_response_text %}
+                                        {{ command.scheduled_response_text }}
+                                    {% endif %}
+                                </div><!-- div content-->
+                            </div><!-- div container -->
+                        {% endif %}
+
+                    {% endfor %}
+
+                    <div class="container row-fluid">
+                        <div class="new-chat-content form-group">
+                            <div class="new-chat-text-container">
+                                <input type="text" name="command" class="form-control"
+                                        {% if command_response.is_transaction_request and not command_response.is_read_request %}
+                                       disabled="disabled"
+                                        {% endif %}
+                                       placeholder="command" value="{{ request.form.command }}"
+                                       required>
+                                {% if command_response.is_transaction_request and not command_response.is_read_request %}
+                                    <input name="isCreditAccount" type="hidden" placeholder="command"
+                                           value="{{ command_response.is_credit_account }}"
+                                           required/>
+                                    <input name="referredUser" type="hidden" placeholder="command"
+                                           value="{{ command_response.referred_user }}"
+                                           required/>
+                                    <input name="referredAmount" type="hidden" placeholder="command"
+                                           value="{{ command_response.referred_amount }}"
+                                           required/>
+                                    <input type="file" name="file"/>
+                                    <button type="submit" class="button"> GO!</button>
+                                {% endif %}
+                            </div>
+                            <div class="new-chat-button-container text-right">
+                                <button class="btn btn-primary" type="submit">Send
+                                    <i class="glyphicon glyphicon-send"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('home') }}" class="btn btn-default">Back to home</a>
+                </form>
+            </div><!-- div panel body-->
+        </div><!-- div panel -->
 {% endblock %}

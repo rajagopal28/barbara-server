@@ -72,7 +72,6 @@ def process_command(command_sentence):
     command_response.is_read_sent_transaction = check_read_sent_transaction(command_sentence)
     # is this promotions check
     command_response.is_promotions_check = check_promotions_enquiry(command_sentence)
-    print command_response.is_promotions_check
     # remove promotion references
     command_sentence = remove_promotions_context_from_sentence(command_sentence)
     command_response.time_associated = get_time_from_reference(command_sentence)
