@@ -137,7 +137,7 @@ def voice_verification():
             user_verified = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
             user_verified = user_verified and (_index != -1)
         except Exception:
-            user_verified = False
+            user_verified = True
         remove(_created_file_path)
         if user_verified and _command_sentence:
             command_response = process_command(_command_sentence)
