@@ -27,7 +27,7 @@ class UserPreference(db.Model):
             'nickName': self.nick_name,
             'securityQuestion': self.security_question,
             'budget': self.budget,
-            'user': self.user.to_dict() if not ignore_user else None,
+            'user': self.user.to_dict() if (not ignore_user) and self.user else None,
             'createdTS': self.created_ts,
             'lastUpdatedTS': self.last_updated_ts,
         }

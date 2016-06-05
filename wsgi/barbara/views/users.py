@@ -207,6 +207,8 @@ def get_user_preferences():
     _user_id = request.args['userId']
     if _user_id:
         user_preference = UserPreference.query.filter_by(user_id=_user_id).first()
+        if not user_preference:
+            user_preference = UserPreference(user_id=_user_id)
         return jsonify(success=True, item=user_preference.to_dict())
     return jsonify(success=False, item=None)
 
