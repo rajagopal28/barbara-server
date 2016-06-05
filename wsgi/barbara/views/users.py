@@ -52,6 +52,7 @@ def voice_register():
     if request.method == 'POST':
         # receive voice file from request
         if session.get('user', None):
+            _is_post_response = True
             _user_id = session['user']['id']
             user = User.query.filter_by(id=_user_id).first()
             _file = request.files['file']
@@ -69,7 +70,7 @@ def voice_register():
                     _success = True
                 except Exception:
                     _success = False
-                remove(_file)
+                remove(_created_file_path)
             # register with the current user's speaker profile
             return render_template('post-voice.html', is_post_response=_is_post_response, success=_success)
     else:
