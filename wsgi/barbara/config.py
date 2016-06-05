@@ -11,7 +11,7 @@ SECRET_KEY = 'L0nd0n6rIdg3i5F@11ingD0wn'
 DEBUG = True
 ASSISTANT_NAME = 'Barbara'
 USER_EMAIL_FOR_PROMOTIONS = 'bookworms.app.team@gmail.com'
-USER_EMAIL_PASSWORD = 'Ignite@pp'
+USER_EMAIL_PASSWORD = 'somepassword'
 
 # manipulate the environmental configs from OPENSHIFT here
 if 'OPENSHIFT_MYSQL_DB_URL' in environ:

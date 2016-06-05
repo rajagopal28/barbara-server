@@ -14,6 +14,7 @@ def create_profile(subscription_key, locale):
     creation_response = helper.create_profile(locale)
 
     print('Profile ID = {0}'.format(creation_response.get_profile_id()))
+    return creation_response.get_profile_id()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

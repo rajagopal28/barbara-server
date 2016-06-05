@@ -6,11 +6,16 @@
                 <h3 class="panel-title">Process Voice</h3>
             </div>
             <div class="panel-body">
-                {% if error %}
-
-                    <div class="alert alert-danger" role="alert">
-                        <p><strong>Error:</strong> {{ error }}</p>
+                {% if is_post_response %}
+                  {% if success %}
+                    <div class="alert alert-success" role="alert">
+                        <p><strong>Success:</strong> Voice verified!!</p>
                     </div>
+                    {% else %}
+                    <div class="alert alert-danger" role="alert">
+                        <p><strong>Error:</strong> Error verifying voice</p>
+                    </div>
+                    {% endif %}
                 {% endif %}
                 <form class="form-horizontal" action="" method="post">
                     <div class="form-group">

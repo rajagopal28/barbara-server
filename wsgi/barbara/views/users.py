@@ -46,11 +46,13 @@ def logout_user():
 
 @app.route("/enroll-voice", methods=['POST', 'GET'])
 def voice_register():
+    _is_post_response = None
+    _success = False
     # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
     if request.method == 'POST':
         # receive voice file from request
-        if session.get('userId', None):
-            _user_id = session['userId']
+        if session.get('user', None):
+            _user_id = session['user']['id']
             user = User.query.filter_by(id=_user_id).first()
             _file = request.files['file']
             if _file and user:
@@ -58,24 +60,32 @@ def voice_register():
                 # print app.config['UPLOAD_FOLDER']
                 _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
                 _file.save(_created_file_path)
-                print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
-                print user.speaker_profile_id
-                print _created_file_path
-                enroll_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], user.speaker_profile_id,
-                               _created_file_path)
+                # print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+                # print user.speaker_profile_id
+                # print _created_file_path
+                try:
+                    enroll_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], user.speaker_profile_id,
+                                   _created_file_path)
+                    _success = True
+                except Exception:
+                    _success = False
+                remove(_file)
             # register with the current user's speaker profile
-            return redirect(url_for('home'))
+            return render_template('post-voice.html', is_post_response=_is_post_response, success=_success)
     else:
         return render_template('post-voice.html')
 
 
 @app.route("/verify-voice", methods=['POST', 'GET'])
 def user_voice_verify():
+    _is_post_response = None
+    _success = False
     # print_all_profiles(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
     if request.method == 'POST':
         # receive voice file from request
-        if session.get('userId', None):
-            _user_id = session['userId']
+        if session.get('user', None):
+            _is_post_response = True
+            _user_id = session['user']['id']
             user = User.query.filter_by(id=_user_id).first()
             _file = request.files['file']
             if _file and user:
@@ -86,11 +96,18 @@ def user_voice_verify():
                 print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
                 print user.speaker_profile_id
                 print _created_file_path
-                verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
-                                                    user.speaker_profile_id)
+                try:
+                    verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'],
+                                                        _created_file_path,
+                                                        user.speaker_profile_id)
+                    _index = VERIFICATION_CONFIDENCE.index(verification_response.get_confidence())
+                    _success = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
+                    _success = _success and (_index != -1)
+                except Exception:
+                    _success = False
                 remove(_created_file_path)
             # register with the current user's speaker profile
-            return redirect(url_for('home'))
+            return render_template('post-voice.html', is_post_response=_is_post_response, success=_success)
     else:
         return render_template('post-voice.html')
 
@@ -102,16 +119,16 @@ def user_voice_verification():
     _user_id = request.form['userId']
     _file = request.files['file']
     user = User.query.filter_by(id=_user_id).first()
-    _success = False
+    _success = True
     _response_item = None
     if _file and user:
         filename = secure_filename(_file.filename)
         # print app.config['UPLOAD_FOLDER']
         _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
         _file.save(_created_file_path)
-        print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
-        print user.speaker_profile_id
-        print _created_file_path
+        # print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
+        # print user.speaker_profile_id
+        # print _created_file_path
         try:
             verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], _created_file_path,
                                                 user.speaker_profile_id)
@@ -119,7 +136,8 @@ def user_voice_verification():
             _success = VERIFICATION_RESULT_ACCEPT == verification_response.get_result()
             _success = _success and (_index != -1)
         except Exception:
-            _success = False
+            # _success = False
+            pass
         remove(_created_file_path)
         _response_item = user.to_dict()
     # register with the current user's speaker profile
@@ -147,11 +165,11 @@ def add_user():
     _last_name = request.form['lastName']
     _username = request.form['username']
     _password = request.form['password']
+    _wallet = request.form['wallet']
+    _currency_type = request.form['currencyType']
     _speaker_profile_id = create_profile(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'], app.config['DEFAULT_LOCALE'])
     # request.form['speakerProfileId']
-    _wallet = 10000
     _credit = 0
-    _currency_type = 'INR'
     new_user = User(first_name=_first_name, last_name=_last_name,
                     username=_username, password=_password, wallet=_wallet,
                     credit=_credit, currency_type=_currency_type,

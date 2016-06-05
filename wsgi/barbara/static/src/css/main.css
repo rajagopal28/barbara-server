@@ -33,6 +33,9 @@
 .app-screen .thumbnail{
     width: 500px;
 }
+.padding-centre {
+    padding : 0 10%;
+}
 .social_media li a {
     display: block;
     height: 24px;

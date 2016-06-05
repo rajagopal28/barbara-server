@@ -107,7 +107,7 @@ def process_user_command():
                     .order_by(CommandResponse.created_ts.asc()).all()
             else:
                 _command_start_id = _command_response.id
-            print _input_command
+            # print _input_command
             _command_history.append(_command_response)
         return render_template('chat-bot.html', command_history=_command_history,
                                current_session_command_start=_command_start_id, command_response=_command_response)
@@ -229,7 +229,7 @@ def process_command_response(command_response, user_id):
         command_response.scheduled_response_text = command_response.response_text
         command_response.response_text += ' added'
     elif command_response.is_promotions_check:
-        print command_response.response_text
+        # print command_response.response_text
         if len(command_response.response_text) > 0:
             # check promotions mail
             promotions_key = command_response.response_text
