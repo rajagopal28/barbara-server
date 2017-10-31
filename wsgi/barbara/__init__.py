@@ -12,5 +12,8 @@ db = SQLAlchemy(app)
 import barbara.views.users
 import barbara.views.transactions
 
+db.create_all()
+db.session.commit()
+
 if __name__ == "__main__":
     app.run()
