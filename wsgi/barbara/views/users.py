@@ -12,6 +12,7 @@ from oxford.speaker_recognition.Verification.CreateProfile import create_profile
 from oxford.speaker_recognition.Verification.EnrollProfile import enroll_profile
 from oxford.speaker_recognition.Verification.VerifyFile import verify_file
 
+
 VERIFICATION_RESULT_ACCEPT = 'Accept'
 VERIFICATION_CONFIDENCE = ['Low', 'Normal', 'High']
 
@@ -94,9 +95,9 @@ def user_voice_verify():
                 # print app.config['UPLOAD_FOLDER']
                 _created_file_path = path.join(app.config['UPLOAD_FOLDER'], filename)
                 _file.save(_created_file_path)
-                print app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY']
-                print user.speaker_profile_id
-                print _created_file_path
+                print(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'])
+                print( user.speaker_profile_id)
+                print (_created_file_path)
                 try:
                     verification_response = verify_file(app.config['MICROSOFT_SPEAKER_RECOGNITION_KEY'],
                                                         _created_file_path,

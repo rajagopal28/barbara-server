@@ -22,16 +22,16 @@ def read_email(search_pattern):
     try:
         MAIL_BOX.login(USER_EMAIL, USER_PASSWORD)
     except imaplib.IMAP4.error:
-        print "LOGIN FAILED!!! "
-        return
+        print("LOGIN FAILED!!! ")
+        return None
         # ... exit or deal with failure...
     rv, mailboxes = MAIL_BOX.list()
     if rv == 'OK':
-        print "Mailboxes:"
-        print mailboxes
+        print("Mailboxes:")
+        print(mailboxes)
     rv, data = MAIL_BOX.select(EMAIL_LABEL)
     if rv == 'OK':
-        print "Processing mailbox...\n"
+        print("Processing mailbox...\n")
         search_response = process_mailbox(MAIL_BOX, search_pattern)  # ... do something with emails, see below ...
         MAIL_BOX.close()
     MAIL_BOX.logout()
@@ -43,30 +43,30 @@ def read_email(search_pattern):
 def process_mailbox(MAIL_BOX_INSTANCE, search_pattern):
     # regex = r'(X-GM-RAW "subject:\"%s\"")' % search_pattern
     search_response = []
-    print search_pattern
+    print(search_pattern)
     date = (datetime.date.today() - datetime.timedelta(MAIL_TIME_FRAME)).strftime("%d-%b-%Y")
     rv, data = MAIL_BOX_INSTANCE.search(None, SEARCH_TYPE_ALL,
                         '(SENTSINCE {date} HEADER Subject "{subject_pattern}")'
                                         .format(date=date, subject_pattern=search_pattern))
     # M.sort(SORT_RECENT_FIRST, ENCODING_UTF_8, SEARCH_TYPE_ALL, regex)  #
     if rv != 'OK':
-        print "No messages found!"
-        return
+        print("No messages found!")
+        return None
 
     for num in data[0].split():
         rv, data = MAIL_BOX_INSTANCE.fetch(num, '(RFC822)')
         if rv != 'OK':
-            print "ERROR getting message", num
-            return
+            print("ERROR getting message", num)
+            return None
 
         msg = email.message_from_string(data[0][1])
-        print 'Message %s: %s' % (num, msg['Subject'])
-        print 'Raw Date:', msg['Date']
+        print('Message %s: %s' % (num, msg['Subject']))
+        print('Raw Date:', msg['Date'])
         search_response.append(msg['Subject'])
         date_tuple = email.utils.parsedate_tz(msg['Date'])
         if date_tuple:
             local_date = datetime.datetime.fromtimestamp(
                     email.utils.mktime_tz(date_tuple))
-            print "Local Date:", \
-                local_date.strftime("%a, %d %b %Y %H:%M:%S")
+            print("Local Date:", \
+                local_date.strftime("%a, %d %b %Y %H:%M:%S"))
     return search_response

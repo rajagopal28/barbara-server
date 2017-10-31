@@ -96,7 +96,7 @@ def process_user_command():
             _command_start_id = request.form['startCommandId']
             _command_response = process_command(command_sentence=_input_command)
             _command_response.user_id = _user_id
-            print _command_response.to_dict()
+            print (_command_response.to_dict())
             _command_response = process_command_response(command_response=_command_response, user_id=_user_id)
             db.session.add(_command_response)
             db.session.commit()
