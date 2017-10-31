@@ -1,13 +1,13 @@
-import httplib
-from urlparse import urlparse
-from urllib import quote
+from http import client as httplib
+from urllib.parse import urlparse
+from urllib.parse import quote
 import json
 import time
 from contextlib import closing
-import ProfileCreationResponse
-import EnrollmentResponse
-import VerificationResponse
-import VerificationProfile
+from . import ProfileCreationResponse
+from . import EnrollmentResponse
+from . import VerificationResponse
+from . import VerificationProfile
 import logging
 
 class VerificationServiceHttpClientHelper:

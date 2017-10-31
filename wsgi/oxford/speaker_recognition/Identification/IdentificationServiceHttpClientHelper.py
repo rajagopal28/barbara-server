@@ -30,16 +30,16 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import httplib
-from urlparse import urlparse
-import urllib
+from http import client as httplib
+from urllib.parse import urlparse
+from urllib.parse import quote
 import json
 import time
 from contextlib import closing
-import IdentificationProfile
-import IdentificationResponse
-import EnrollmentResponse
-import ProfileCreationResponse
+from . import IdentificationProfile
+from . import IdentificationResponse
+from . import EnrollmentResponse
+from . import ProfileCreationResponse
 import logging
 
 class IdentificationServiceHttpClientHelper:
@@ -131,7 +131,7 @@ class IdentificationServiceHttpClientHelper:
             # Prepare the request
             request_url = '{0}/{1}/enroll'.format(
                 self._IDENTIFICATION_PROFILES_URI,
-                urllib.quote(profile_id))
+                quote(profile_id))
 
             # Prepare the body of the message
             with open(file_path, 'rb') as body:
@@ -172,7 +172,7 @@ class IdentificationServiceHttpClientHelper:
             test_profile_ids_str = ','.join(test_profile_ids)
             request_url = '{0}?identificationProfileIds={1}'.format(
                 self._IDENTIFICATION_URI,
-                urllib.quote(test_profile_ids_str))
+                quote(test_profile_ids_str))
 
             # Prepare the body of the message
             with open(file_path, 'rb') as body:

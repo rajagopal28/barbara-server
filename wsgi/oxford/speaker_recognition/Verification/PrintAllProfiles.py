@@ -1,4 +1,4 @@
-import VerificationServiceHttpClientHelper
+from . import VerificationServiceHttpClientHelper
 import sys
 
 def print_all_profiles(subscription_key):

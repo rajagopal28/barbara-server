@@ -1,4 +1,4 @@
-import VerificationServiceHttpClientHelper
+from . import VerificationServiceHttpClientHelper
 import sys
 
 def enroll_profile(subscription_key, profile_id, file_path):

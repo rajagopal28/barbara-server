@@ -1,4 +1,4 @@
-import VerificationServiceHttpClientHelper
+from . import VerificationServiceHttpClientHelper
 import sys
 
 def create_profile(subscription_key, locale):
